@@ -1,40 +1,41 @@
 package logic;
 
 public class Route {
-	private int id;
-	private int distance;
-	private int travelTime;
-	private int trans;
-	private int src;
-	private int dest;
-	private String label;
-	
-	public Route(int id, int distance, int travelTime, int trans, int src, int dest, String label) {
-		super();
-		this.id = id;
-		this.distance = distance;
-		this.travelTime = travelTime;
-		this.trans = trans;
-		this.src = src;
-		this.dest = dest;
-		this.label = label;
-	}
+    private int id;
+    private int distance;
+    private int travelTime;
+    private int trans;
+    private int src;
+    private int dest;
+    private String label;
 
-	public int getSrc() {
-		return src;
-	}
+    public Route(int id, int distance, int travelTime, int trans, int src, int dest, String label) {
+        this.id = id;
+        this.distance = distance;
+        this.travelTime = travelTime;
+        this.trans = trans;
+        this.src = src;
+        this.dest = dest;
+        this.label = label;
+    }
 
-	public void setSrc(int src) {
-		this.src = src;
-	}
+    public int getDistance() {
+        return distance;
+    }
 
-	public int getDest() {
-		return dest;
-	}
+    public int getTravelTime() {
+        return travelTime;
+    }
 
-	public void setDest(int dest) {
-		this.dest = dest;
-	}
-	
-	
+    public int getSrc() {
+        return src;
+    }
+
+    public int getDest() {
+        return dest;
+    }
+
+    public String getLabel() {
+        return label;
+    }
 }
