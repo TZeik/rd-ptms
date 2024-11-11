@@ -1,22 +1,26 @@
 package logic;
 
-import java.util.List;
+import java.io.Serializable;
 
-public class Stop {
-	private int id;
+public class Stop implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3271700719054280445L;
+	private String id;
 	private String label;
 
-	public Stop(int id, String label) {
+	public Stop(String id, String label) {
 		super();
 		this.id = id;
 		this.label = label;
 	}
 
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setI0(String id) {
 		this.id = id;
 	}
 

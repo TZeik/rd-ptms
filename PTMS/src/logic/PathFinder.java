@@ -1,9 +1,14 @@
 package logic;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class PathFinder {
-    private final Graph graph;
+public class PathFinder implements Serializable{
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 3412902586326110702L;
+	private final Graph graph;
     private final int V;
 
     public PathFinder(Graph graph, int vertices) {
@@ -59,7 +64,7 @@ public class PathFinder {
             
             // Para cada vecino del vértice actual
             for (Stop stop : neighbors) {
-                int v = stop.getId();
+                int v = neighbors.indexOf(stop);
                 // Obtener la ruta entre u y v
                 Route route = graph.getRoute(u, v);
                 if (route == null) continue;
