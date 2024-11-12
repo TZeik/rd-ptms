@@ -87,6 +87,10 @@ public class Graph implements Serializable{
         String routeKey = searchRouteId(src, dest);
         return routes.get(routeKey);
     }
+    
+    public Map<String, Route> getRoutes() {
+        return routes;
+    }
 
     public Stop getStop(int id) {
         return stops.get(id);
@@ -119,6 +123,25 @@ public class Graph implements Serializable{
             for(Stop stop : currentList) {
             	System.out.print(stop.getLabel());
             	if(currentList.indexOf(stop) != currentList.size() - 1) System.out.print(" -> ");
+            }
+            System.out.println();
+        }
+    }
+    
+    public void print() {
+        System.out.println("Estado actual del sistema de transporte:");
+        for(LinkedList<Stop> currentList : adjList) {
+            for(Stop stop : currentList) {
+                System.out.print(stop.getLabel());
+                if(currentList.indexOf(stop) != currentList.size() - 1) {
+                    Route route = getRoute(currentList.indexOf(stop), 
+                                        currentList.indexOf(currentList.get(currentList.indexOf(stop) + 1)));
+                    if (route != null) {
+                        System.out.print(" -> [" + route.getCurrentEvent() + "] -> ");
+                    } else {
+                        System.out.print(" -> ");
+                    }
+                }
             }
             System.out.println();
         }

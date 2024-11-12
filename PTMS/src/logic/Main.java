@@ -40,6 +40,14 @@ public class Main {
 		System.out.println("Ruta más corta por tiempo desde La Vega:");
 		pathFinder.printPath(parentTime, 2);
 		
+		 System.out.println("\nCalculando ruta más corta por tiempo (considerando condiciones):");
+	     int[] parentTime = pathFinder.dijkstra(0, false);
+	     pathFinder.printPath(parentTime, 2);
+
+	     System.out.println("\nCalculando ruta más corta por distancia (sin considerar condiciones):");
+	     int[] parentDistance = pathFinder.dijkstra(0, true);
+	     pathFinder.printPath(parentDistance, 2);
+		
 		System.out.println("______________");
 		System.out.println("Grafo completo");
 		graph.print();

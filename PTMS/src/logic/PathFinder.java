@@ -78,6 +78,9 @@ public class PathFinder {
 
     // Algoritmo de Dijkstra
     public int[] dijkstra(int source, boolean useDistance) {
+        // Actualizar eventos aleatorios antes de calcular la ruta
+        updateAllEvents();
+        
         int[] distances = new int[V];
         int[] parent = new int[V];
         boolean[] visited = new boolean[V];
@@ -100,7 +103,7 @@ public class PathFinder {
                 Route route = graph.getRoute(u, v);
                 if (route == null) continue;
 
-                int weight = useDistance ? route.getDistance() : route.getTravelTime();
+                int weight = useDistance ? route.getDistance() : route.getAdjustedTravelTime();
 
                 if (!visited[v] && distances[u] != Integer.MAX_VALUE && 
                     distances[u] + weight < distances[v]) {
@@ -111,6 +114,48 @@ public class PathFinder {
             }
         }
         return parent;
+    }
+
+    // Método para actualizar eventos de todas las rutas
+    private void updateAllEvents() {
+        for (LinkedList<Stop> stops : graph.getAdjList()) {
+            for (Stop stop : stops) {
+                for (Map.Entry<String, Route> entry : graph.getRoutes().entrySet()) {
+                    Route route = entry.getValue();
+                    route.updateEvent();
+                }
+            }
+        }
+    }
+
+    // Método modificado para mostrar información sobre eventos
+    public void printPath(int[] parent, int dest) {
+        LinkedList<Integer> path = new LinkedList<>();
+        int current = dest;
+        int totalTime = 0;
+        int totalDistance = 0;
+
+        while (current != -1) {
+            path.addFirst(current);
+            if (parent[current] != -1) {
+                Route route = graph.getRoute(parent[current], current);
+                totalTime += route.getAdjustedTravelTime();
+                totalDistance += route.getDistance();
+            }
+            current = parent[current];
+        }
+
+        System.out.println("Ruta más corta:");
+        for (int i = 0; i < path.size(); i++) {
+            Stop stop = graph.getStop(path.get(i));
+            System.out.print(stop.getLabel());
+            if (i < path.size() - 1) {
+                Route route = graph.getRoute(path.get(i), path.get(i + 1));
+                System.out.print(" -> [" + route.getCurrentEvent() + "] -> ");
+            }
+        }
+        System.out.println("\nTiempo total de viaje (con eventos): " + totalTime + " minutos");
+        System.out.println("Distancia total: " + totalDistance + " km");
     }
 
     // Algoritmo de Bellman-Ford
