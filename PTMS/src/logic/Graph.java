@@ -123,4 +123,14 @@ public class Graph implements Serializable{
             System.out.println();
         }
     }
+
+	public ArrayList<String> getStopsName() {
+		ArrayList<String> stopNames = new ArrayList<>();
+		
+		for(Stop s : stops) {
+			stopNames.add(s.getLabel());
+		}
+		
+		return stopNames;
+	}
 }

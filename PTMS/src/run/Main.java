@@ -1,11 +1,30 @@
-package logic;
+package run;
+import java.io.FileNotFoundException;
 
-public class Main {
+import javafx.application.Application;
+import javafx.event.EventHandler;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import logic.Graph;
+import logic.PTMS;
+import logic.PathFinder;
+import logic.Stop;
+import visual.MainScreen;
 
+public class Main{
+	
+	
 	public static void main(String[] args) {
 
 		PTMS.getInstance().loadPTMS();
 		Graph graph = PTMS.getInstance().getGraph();
+		
 		
 		// El grafo guardado es el mismo de la siguiente prueba comentada:
 		/*
@@ -43,7 +62,7 @@ public class Main {
 		System.out.println("______________");
 		System.out.println("Grafo completo");
 		graph.print();
-
+		
+		MainScreen.launch(MainScreen.class,args);
 	}
-
 }

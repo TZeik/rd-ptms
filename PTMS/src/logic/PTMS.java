@@ -17,6 +17,7 @@ public class PTMS implements Serializable{
 	private Graph publicTransportMap;
 	private int stopIdGenerator;
 	private int routeIdGenerator;
+	//private Object selected;
 	
 	public PTMS() {
 		super();
