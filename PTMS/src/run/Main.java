@@ -47,6 +47,7 @@ public class Main{
 		PTMS.getInstance().savePTMS();
 		*/
 		
+		/*
 		PathFinder pathFinder = new PathFinder(graph, 3); // 3 es el número de vértices, se puede cambiar por cualquier numero positivo
 
 		// Encontrar la ruta más corta por distancia desde el vértice 0
@@ -59,9 +60,18 @@ public class Main{
 		System.out.println("Ruta más corta por tiempo desde La Vega:");
 		pathFinder.printPath(parentTime, 2);
 		
+		 System.out.println("\nCalculando ruta más corta por tiempo (considerando condiciones):");
+	     parentTime = pathFinder.dijkstra(0, false);
+	     pathFinder.printPath(parentTime, 2);
+
+	     System.out.println("\nCalculando ruta más corta por distancia (sin considerar condiciones):");
+	     parentDistance = pathFinder.dijkstra(0, true);
+	     pathFinder.printPath(parentDistance, 2);
+		
 		System.out.println("______________");
 		System.out.println("Grafo completo");
 		graph.print();
+		*/
 		
 		MainScreen.launch(MainScreen.class,args);
 	}
