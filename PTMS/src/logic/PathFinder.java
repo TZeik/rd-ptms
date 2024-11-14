@@ -142,6 +142,8 @@ public class PathFinder {
         }
 
         System.out.println("Ruta más corta:");
+        
+        
         for (int i = 0; i < path.size(); i++) {
             Stop stop = graph.getStop(path.get(i));
             System.out.print(stop.getLabel());
@@ -150,6 +152,7 @@ public class PathFinder {
                 System.out.print(" -> [" + route.getCurrentEvent() + "] -> ");
             }
         }
+        
         System.out.println("\nTiempo total de viaje (con eventos): " + totalTime + " minutos");
         System.out.println("Distancia total: " + totalDistance + " km");
     }

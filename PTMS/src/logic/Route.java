@@ -16,8 +16,8 @@ public class Route implements Serializable {
     public Route(String id, int distance, int src, int dest, String label) {
         this.id = id;
         this.distance = distance;
-        this.travelTime = 0;
-        this.tranship = 0;
+        this.travelTime = 1;
+        this.tranship = 1;
         this.src = src;
         this.dest = dest;
         this.label = label;
@@ -41,7 +41,7 @@ public class Route implements Serializable {
     }
 
     public int getAdjustedTravelTime() {
-        return (int) Math.ceil(travelTime * currentEvent.getDelayFactor());
+        return (int) Math.ceil(distance * currentEvent.getDelayFactor());
     }
     
     public int getTranship() {

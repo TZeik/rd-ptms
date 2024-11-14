@@ -1,6 +1,7 @@
 package logic;
 
 import java.io.Serializable;
+import java.util.LinkedList;
 
 import javafx.scene.shape.Circle;
 
@@ -60,6 +61,10 @@ public class Stop implements Serializable{
 
 	public void setVisual(Circle visual) {
 		this.visual = visual;
+	}
+	
+	public int getIndex() {
+		return PTMS.getInstance().getGraph().getAdjList().get(0).indexOf(this);
 	}
 
 }
