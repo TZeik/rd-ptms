@@ -42,9 +42,18 @@ public class Graph implements Serializable{
         PTMS.getInstance().setRouteIdGenerator(PTMS.getInstance().getRouteIdGenerator()+1);
     }
     
-    public void deleteStop(int index) {
-    	adjList.remove(index);
-    	this.stops.remove(index);
+    public void deleteStop(Stop stop) {
+    	LinkedList<Stop> currentList = null;
+    	for(LinkedList<Stop> stops : adjList) {
+    		if(stop.getId().equals(stops.get(0).getId())) {
+    			currentList = stops;
+    		}
+    	}
+    	
+    	if(currentList != null) {
+    		adjList.remove(currentList);
+    		this.stops.remove(stop);		
+    	}
     }
     
     // Eliminar una ruta en la lista de adyacencia y en el mapa

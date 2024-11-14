@@ -35,7 +35,7 @@ public class AddStopDialog extends Stage{
         addButton.setOnAction(e -> {
         	Stop stop = new Stop(idField.getText(), labelField.getText());
             app.selectedStop = stop;
-            app.waitForUserAction();
+            app.waitForUserAction(0);
             close();
         });
         

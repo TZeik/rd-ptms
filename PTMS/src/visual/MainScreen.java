@@ -1,5 +1,9 @@
 package visual;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
@@ -32,11 +36,22 @@ public class MainScreen extends Application{
     private StackPane blankBox;
     private Label instructionLabel;
     
+    private Button addNodeButton;
+    private Button editNodeButton;
+    private Button addEdgeButton;
+    private Button editEdgeButton;
+    
+    ArrayList<Circle> graphNodes;
+    ArrayList<Line> graphEdges;
+    
     @Override
     public void start(Stage primaryStage) {
     	
         primaryStage.setTitle("Sistema de Transporte Público PTMS");
-
+        
+        graphNodes = new ArrayList<>();
+        graphEdges = new ArrayList<>();
+        
         // Left Panel: Menu
         VBox menuPane = createMenuPane();
         menuPane.setSpacing(20);
@@ -75,46 +90,65 @@ public class MainScreen extends Application{
         menuPane.setPadding(new Insets(10));
         menuPane.setSpacing(5);
 
-        Button addNodeButton = new Button("Agregar Parada");
+        addNodeButton = new Button("Agregar Parada");
         addNodeButton.setPrefHeight(100);
         addNodeButton.setPrefWidth(125);
         addNodeButton.setOnAction(e -> new AddStopDialog(this).show());
 
-        Button editNodeButton = new Button("Editar Parada");
+        editNodeButton = new Button("Editar Parada");
         editNodeButton.setPrefHeight(100);
         editNodeButton.setPrefWidth(125);
         editNodeButton.setDisable(true);
-        editNodeButton.setOnAction(e -> deleteNode());
+        editNodeButton.setOnAction(e -> new EditStopDialog(this).show());
 
-        Button addEdgeButton = new Button("Agregar Ruta");
+        addEdgeButton = new Button("Agregar Ruta");
         addEdgeButton.setPrefHeight(100);	
         addEdgeButton.setPrefWidth(125);
         addEdgeButton.setOnAction(e -> new AddRouteDialog(this).show());
 
-        Button editEdgeButton = new Button("Editar Ruta");
+        editEdgeButton = new Button("Editar Ruta");
         editEdgeButton.setPrefHeight(100);
         editEdgeButton.setPrefWidth(125);
         editEdgeButton.setDisable(true);
-        editEdgeButton.setOnAction(e -> deleteEdge());
+        editEdgeButton.setOnAction(e -> new EditRouteDialog(this).show());
 
         menuPane.getChildren().addAll(addNodeButton, editNodeButton, addEdgeButton, editEdgeButton);
         return menuPane;
     }
     
-    public void waitForUserAction() {
+    public void waitForUserAction(int arg) {
     	
-        graphPane.setCursor(Cursor.CROSSHAIR);
-        root.setTop(instructionBox);
-        
-        // Mouse click listener
-        graphPane.setOnMouseClicked(this::handleMouseClick);
+    	if(arg == 0) {
+    		graphPane.setCursor(Cursor.CROSSHAIR);
+            root.setTop(instructionBox);
+            
+            // Mouse click listener
+            graphPane.setOnMouseClicked(this::handleMouseClick);
 
-        // Key press listener on the scene to detect 'N' key press
-        graphPane.getScene().setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ESCAPE) {
-            	endUserAction();
-            }
-        });
+            // Key press listener on the scene to detect 'N' key press
+            graphPane.getScene().setOnKeyPressed(event -> {
+                if (event.getCode() == KeyCode.ESCAPE) {
+                	endUserAction();
+                }
+            });
+    	}
+    	
+    	if(arg == 1) {
+    		graphPane.setCursor(Cursor.CROSSHAIR);
+            root.setTop(instructionBox);
+            
+            // Mouse click listener
+            graphPane.setOnMouseClicked(this::handleMoveClick);
+
+            // Key press listener on the scene to detect 'N' key press
+            graphPane.getScene().setOnKeyPressed(event -> {
+                if (event.getCode() == KeyCode.ESCAPE) {
+                	endUserAction();
+                }
+            });
+    	}
+    	
+        
     }
     
     private void endUserAction() {
@@ -131,10 +165,19 @@ public class MainScreen extends Application{
             endUserAction();
     }
     
+    private void handleMoveClick(MouseEvent event) {
+    	selectedStop.setX(event.getX());
+        selectedStop.setY(event.getY());
+        editStop(selectedStop);
+        endUserAction();
+    }
+    
     private void handleNodeClick(MouseEvent event) {
     	
         double clickX = event.getX();
         double clickY = event.getY();
+        
+        Circle lastNode = selectedNode;
         
         for (Circle node : PTMS.getInstance().getStopVisuals()) {
             if (node.contains(clickX, clickY)) {
@@ -143,17 +186,25 @@ public class MainScreen extends Application{
             }
         }
         
+        if(lastNode != null && lastNode.equals(selectedNode)) selectNode(null);
     };
     
     private void selectNode(Circle node) {
-        // Deselect the previously selected node (if any)
-        if (selectedNode != null) {
-            selectedNode.setStyle("-fx-fill: #3498db;");  // Reset to original color
-        }
-        
-     // Highlight the newly selected node
-        selectedNode = node;  // Update the selected node reference
-        selectedNode.setStyle("-fx-fill: #ea5a5a;");  // Change color to red (indicating selection)
+    	if(node != null) {
+    		// Deselect the previously selected node (if any)
+	        if (selectedNode != null) {
+	            selectedNode.setStyle("-fx-fill: #3498db;");  // Reset to original color
+	        }
+	        
+	     // Highlight the newly selected node
+	        editNodeButton.setDisable(false);
+	        selectedNode = node;  // Update the selected node reference
+	        selectedNode.setStyle("-fx-fill: #ea5a5a;");  // Change color to red (indicating selection)
+    	}else{
+    		editNodeButton.setDisable(true);
+    		if(selectedNode != null) selectedNode.setStyle("-fx-fill: #3498db;");  // Reset to original color
+    		selectedNode = null;
+    	}
     }
     
     private void addStop(Stop stop) {
@@ -161,8 +212,9 @@ public class MainScreen extends Application{
     	node.setStyle("-fx-fill: #3498db;");
     	stop.setVisual(node);
        	PTMS.getInstance().getGraph().addStop(stop);
-    	graphPane.getChildren().add(node);
-    	selectedStop = null;
+    	graphNodes.add(node);
+    	selectNode(null);
+    	updateGraph();
     }
     
     public void addRoute(Stop a, Stop b) {
@@ -170,10 +222,60 @@ public class MainScreen extends Application{
         route.setStyle("-fx-stroke: #2c3e50; -fx-stroke-width: 2;");
         route.setStroke(Color.BLACK);
         route.setStrokeWidth(2);
-        Polygon arrowhead = createArrowhead(a.getX(), a.getY(), b.getX(), b.getY());
-
-        // Add the edge and the arrowhead to the root pane
-        graphPane.getChildren().addAll(route, arrowhead);
+        graphEdges.add(route);
+        selectNode(null);
+        updateGraph();
+    }
+    
+    public void editStop(Stop stop) {
+    	graphNodes.remove(stop.getVisual());
+    	Circle node = new Circle(stop.getX(), stop.getY(), 10);
+    	node.setStyle("-fx-fill: #3498db;");
+    	stop.setVisual(node);
+    	PTMS.getInstance().getGraph().modifyStop(stop);
+    	graphNodes.add(node);
+    	selectNode(null);
+    	remakeRoutes();
+    	updateGraph();
+    }
+    
+    public void deleteStop(Stop stop) {
+    	 graphNodes.remove(stop.getVisual());
+    	 PTMS.getInstance().getGraph().deleteStop(stop);
+    	 selectNode(null);
+    	 updateGraph();
+    }
+    public void deleteRoute() {
+    	
+    }
+    
+    private void remakeRoutes() {
+    	graphEdges.removeAll(graphEdges);
+    	Line currentRoute;
+    	for(LinkedList<Stop> currentList : PTMS.getInstance().getGraph().getAdjList()) {
+    		for(Stop stop : currentList) {
+    			if(stop != currentList.get(0)) {
+    				currentRoute = new Line(currentList.get(0).getX(), currentList.get(0).getY(), stop.getX(), stop.getY());
+        			currentRoute.setStyle("-fx-stroke: #2c3e50; -fx-stroke-width: 2;");
+        	        currentRoute.setStroke(Color.BLACK);
+        	        currentRoute.setStrokeWidth(2);
+        	        graphEdges.add(currentRoute);
+    			}
+    		}
+    	}
+    }
+    
+    private void updateGraph() {
+    	graphPane.getChildren().removeAll(graphPane.getChildren());
+    	
+    	// Adding nodes to the graphPane
+    		graphPane.getChildren().addAll(graphNodes);
+    	// Adding edges to the graphPane
+    		for(Line l : graphEdges) {
+    			Polygon arrowhead = createArrowhead(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY());
+    	        // Add the edge and the arrowhead to the root pane
+    			graphPane.getChildren().addAll(l, arrowhead);
+    		}
     }
     
     private Polygon createArrowhead(double startX, double startY, double endX, double endY) {
@@ -210,11 +312,6 @@ public class MainScreen extends Application{
 
         return arrowhead;
     }
-    
-    private void deleteNode() { /* Delete node logic */ }
-    private void deleteEdge() { /* Delete edge logic */ }
-    private void selectStop(Node node) { /* Select node logic */ }
-    
-    
-    
+  
+     
 }
