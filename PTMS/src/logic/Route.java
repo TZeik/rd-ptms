@@ -7,17 +7,17 @@ public class Route implements Serializable {
     private String id;
     private int distance;
     private int travelTime;
-    private int trans;
+    private int tranship;
     private int src;
     private int dest;
     private String label;
     private WeatherTrafficEvent currentEvent;
 
-    public Route(String id, int distance, int travelTime, int trans, int src, int dest, String label) {
+    public Route(String id, int distance, int src, int dest, String label) {
         this.id = id;
         this.distance = distance;
-        this.travelTime = travelTime;
-        this.trans = trans;
+        this.travelTime = 0;
+        this.tranship = 0;
         this.src = src;
         this.dest = dest;
         this.label = label;
@@ -44,12 +44,12 @@ public class Route implements Serializable {
         return (int) Math.ceil(travelTime * currentEvent.getDelayFactor());
     }
     
-    public int getTrans() {
-        return trans;
+    public int getTranship() {
+        return tranship;
     }
 
-    public void setTrans(int trans) {
-        this.trans = trans;
+    public void setTranship(int tranship) {
+        this.tranship = tranship;
     }
 
     public int getSrc() {
@@ -103,7 +103,7 @@ public class Route implements Serializable {
                ", travelTime=" + travelTime + 
                ", adjustedTravelTime=" + getAdjustedTravelTime() +
                ", currentConditions=" + currentEvent.toString() +
-               ", trans=" + trans + 
+               ", tranship=" + tranship + 
                ", src=" + src + 
                ", dest=" + dest + 
                ", label=" + label + "]";

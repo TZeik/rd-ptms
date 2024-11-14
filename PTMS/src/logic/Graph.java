@@ -138,8 +138,17 @@ public class Graph implements Serializable{
 		
 		return stopNames;
 	}
-
-    
+	
+	public ArrayList<String> getStopsId() {
+		ArrayList<String> stopId = new ArrayList<>();
+		
+		for(Stop s : stops) {
+			stopId.add(s.getId());
+		}
+		
+		return stopId;
+	}
+	
     public void print() {
         System.out.println("Estado actual del sistema de transporte:");
         for(LinkedList<Stop> currentList : adjList) {

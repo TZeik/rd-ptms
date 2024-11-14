@@ -15,8 +15,6 @@ import logic.Stop;
 public class AddStopDialog extends Stage{
 	private TextField idField;
 	private TextField labelField;
-	private TextField xField;
-    private TextField yField;
     private Button addButton;
     private Button cancelButton;
 
@@ -26,8 +24,6 @@ public class AddStopDialog extends Stage{
         
         idField = new TextField();
         labelField = new TextField();
-        xField = new TextField();
-        yField = new TextField();
         addButton = new Button("Agregar");
         cancelButton = new Button("Cancelar");
         
@@ -37,8 +33,9 @@ public class AddStopDialog extends Stage{
         
         // Set action for the Add button
         addButton.setOnAction(e -> {
-        	Stop stop = new Stop(idField.getText(), labelField.getText(), Double.parseDouble(xField.getText()), Double.parseDouble(yField.getText()));
-            PTMS.getInstance().getGraph().addStop(stop);
+        	Stop stop = new Stop(idField.getText(), labelField.getText());
+            app.selectedStop = stop;
+            app.waitForUserAction();
             close();
         });
         
@@ -53,13 +50,11 @@ public class AddStopDialog extends Stage{
         layout.getChildren().addAll(
         	new Label("ID:"), idField,
         	new Label("Nombre:"), labelField,
-            new Label("Posición X:"), xField,
-            new Label("Posición Y:"), yField,
             mybuttons
         );
         mybuttons.getChildren().addAll(addButton, cancelButton);
 
-        Scene scene = new Scene(layout, 300, 300);
+        Scene scene = new Scene(layout, 300, 180);
         setScene(scene);
     }
 }

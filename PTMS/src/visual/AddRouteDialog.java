@@ -13,11 +13,13 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import logic.PTMS;
+import logic.Route;
 import logic.Stop;
 
 public class AddRouteDialog extends Stage{
 	private TextField idField;
 	private TextField labelField;
+	private TextField distanceField;
 	private ComboBox<String> startNodeField;
     private ComboBox<String> endNodeField;
     private Button addButton;
@@ -29,12 +31,14 @@ public class AddRouteDialog extends Stage{
 
         idField = new TextField();
         labelField = new TextField();
+        distanceField = new TextField();
         startNodeField = new ComboBox<>();
         endNodeField = new ComboBox<>();
         addButton = new Button("Agregar");
         cancelButton = new Button("Cancelar");
         
         ObservableList<String> observableStops = FXCollections.observableArrayList(PTMS.getInstance().getGraph().getStopsName());
+        ObservableList<String> observableId = FXCollections.observableArrayList(PTMS.getInstance().getGraph().getStopsId());
         startNodeField.setItems(observableStops);
         endNodeField.setItems(observableStops);
         startNodeField.setPromptText("Selecciona una Parada");
@@ -46,6 +50,9 @@ public class AddRouteDialog extends Stage{
 
         // Set action for the buttons
         addButton.setOnAction(e -> {
+        	Route route = new Route(idField.getText(), Integer.parseInt(distanceField.getText()), observableStops.indexOf(startNodeField.getValue()), observableStops.indexOf(endNodeField.getValue()), labelField.getText());
+        	PTMS.getInstance().getGraph().addRoute(route);
+        	app.addRoute(PTMS.getInstance().getGraph().searchStop(observableId.get(startNodeField.getSelectionModel().getSelectedIndex())), PTMS.getInstance().getGraph().searchStop(observableId.get(endNodeField.getSelectionModel().getSelectedIndex())));
             close();
         });
         
@@ -62,11 +69,12 @@ public class AddRouteDialog extends Stage{
         	new Label("Nombre:"), labelField,
             new Label("Salida:"), startNodeField,
             new Label("Destino: "), endNodeField,
+            new Label("Distancia: "), distanceField,
             mybuttons
         );
         mybuttons.getChildren().addAll(addButton, cancelButton);
 
-        Scene scene = new Scene(layout, 300, 300);
+        Scene scene = new Scene(layout, 300, 500);
         setScene(scene);
 
     }

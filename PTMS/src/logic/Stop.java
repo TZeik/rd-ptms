@@ -2,6 +2,8 @@ package logic;
 
 import java.io.Serializable;
 
+import javafx.scene.shape.Circle;
+
 public class Stop implements Serializable{
 	/**
 	 * 
@@ -10,13 +12,14 @@ public class Stop implements Serializable{
 	private String id;
 	private String label;
 	private double x,y;
+	private Circle visual;
 
-	public Stop(String id, String label, double x, double y) {
+	public Stop(String id, String label) {
 		super();
 		this.id = id;
 		this.label = label;
-		this.x = x;
-		this.y = y;
+		this.x = 0;
+		this.y = 0;
 	}
 
 	public String getId() {
@@ -49,6 +52,14 @@ public class Stop implements Serializable{
 
 	public void setY(double y) {
 		this.y = y;
+	}
+
+	public Circle getVisual() {
+		return visual;
+	}
+
+	public void setVisual(Circle visual) {
+		this.visual = visual;
 	}
 
 }

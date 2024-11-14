@@ -6,6 +6,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.LinkedList;
+
+import javafx.scene.shape.Circle;
 
 public class PTMS implements Serializable{
 	
@@ -105,6 +109,25 @@ public class PTMS implements Serializable{
 		String id;
 		id = "R-" + routeIdGenerator;
 		return id;
+	}
+	
+	public ArrayList<Circle> getStopVisuals(){
+		ArrayList<Circle> myCircles = new ArrayList<>();
+		
+		for(LinkedList<Stop> stop : PTMS.getInstance().getGraph().getAdjList()) {
+			myCircles.add(stop.get(0).getVisual());
+		}
+		
+		return myCircles;
+	}
+	
+	public Stop getStopbyVisual(Circle circle) {
+	
+		for(LinkedList<Stop> stop : PTMS.getInstance().getGraph().getAdjList()) {
+			if(stop.get(0).getVisual().equals(circle)) return stop.get(0);
+		}
+		
+		return null;
 	}
 	
 }
