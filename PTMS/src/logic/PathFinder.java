@@ -26,7 +26,6 @@ public class PathFinder {
         }
     }
 
-    // Clase para representar aristas para Kruskal
     class Edge implements Comparable<Edge> {
         int src, dest, weight;
 
@@ -42,7 +41,6 @@ public class PathFinder {
         }
     }
 
-    // Clase para conjunto disjunto (usado en Kruskal)
     class DisjointSet {
         int[] parent, rank;
 
@@ -76,9 +74,7 @@ public class PathFinder {
         }
     }
 
-    // Algoritmo de Dijkstra
     public int[] dijkstra(int source, boolean useDistance) {
-        // Actualizar eventos aleatorios antes de calcular la ruta
         updateAllEvents();
         
         int[] distances = new int[V];
@@ -99,7 +95,7 @@ public class PathFinder {
 
             LinkedList<Stop> neighbors = graph.getAdjList().get(u);
             for (Stop stop : neighbors) {
-                int v = neighbors.indexOf(stop);
+                int v = stop.getId();
                 Route route = graph.getRoute(u, v);
                 if (route == null) continue;
 
@@ -116,15 +112,13 @@ public class PathFinder {
         return parent;
     }
 
-    // Método para actualizar eventos de todas las rutas
     private void updateAllEvents() {
-                for (Map.Entry<String, Route> entry : graph.getRoutes().entrySet()) {
-                    Route route = entry.getValue();
-                    route.updateEvent();
+        for (Map.Entry<String, Route> entry : graph.getRoutes().entrySet()) {
+            Route route = entry.getValue();
+            route.updateEvent();
         }
     }
 
-    // Método modificado para mostrar información sobre eventos
     public void printPath(int[] parent, int dest) {
         LinkedList<Integer> path = new LinkedList<>();
         int current = dest;
@@ -143,7 +137,6 @@ public class PathFinder {
 
         System.out.println("Ruta más corta:");
         
-        
         for (int i = 0; i < path.size(); i++) {
             Stop stop = graph.getStop(path.get(i));
             System.out.print(stop.getLabel());
@@ -157,7 +150,6 @@ public class PathFinder {
         System.out.println("Distancia total: " + totalDistance + " km");
     }
 
-    // Algoritmo de Bellman-Ford
     public int[] bellmanFord(int source, boolean useDistance) {
         int[] distances = new int[V];
         int[] parent = new int[V];
@@ -166,12 +158,11 @@ public class PathFinder {
         Arrays.fill(parent, -1);
         distances[source] = 0;
 
-        
         for (int i = 0; i < V - 1; i++) {
             for (int u = 0; u < V; u++) {
                 LinkedList<Stop> neighbors = graph.getAdjList().get(u);
                 for (Stop stop : neighbors) {
-                    int v = neighbors.indexOf(stop);
+                    int v = stop.getId();
                     Route route = graph.getRoute(u, v);
                     if (route == null) continue;
 
@@ -186,11 +177,10 @@ public class PathFinder {
             }
         }
 
-        // Verificar ciclos negativos
         for (int u = 0; u < V; u++) {
             LinkedList<Stop> neighbors = graph.getAdjList().get(u);
             for (Stop stop : neighbors) {
-                int v = neighbors.indexOf(stop);
+                int v = stop.getId();
                 Route route = graph.getRoute(u, v);
                 if (route == null) continue;
 
@@ -207,23 +197,20 @@ public class PathFinder {
         return parent;
     }
 
-    // Algoritmo de Floyd-Warshall
     public int[][] floydWarshall(boolean useDistance) {
         int[][] dist = new int[V][V];
-        int[][] next = new int[V][V]; // Para reconstruir el camino
+        int[][] next = new int[V][V];
 
-        // Inicializar matrices
         for (int i = 0; i < V; i++) {
             Arrays.fill(dist[i], Integer.MAX_VALUE);
             Arrays.fill(next[i], -1);
             dist[i][i] = 0;
         }
 
-        // Llenar con valores directos
         for (int u = 0; u < V; u++) {
             LinkedList<Stop> neighbors = graph.getAdjList().get(u);
             for (Stop stop : neighbors) {
-                int v = neighbors.indexOf(stop);
+                int v = stop.getId();
                 Route route = graph.getRoute(u, v);
                 if (route == null) continue;
 
@@ -233,7 +220,6 @@ public class PathFinder {
             }
         }
 
-        // Algoritmo principal de busqueda
         for (int k = 0; k < V; k++) {
             for (int i = 0; i < V; i++) {
                 for (int j = 0; j < V; j++) {
@@ -250,17 +236,15 @@ public class PathFinder {
         return next;
     }
 
-    // Algoritmo de Prim
     public List<Edge> prim(boolean useDistance) {
         List<Edge> mst = new ArrayList<>();
         boolean[] visited = new boolean[V];
         PriorityQueue<Edge> pq = new PriorityQueue<>();
 
-        // Comenzar desde el vértice 0
         visited[0] = true;
         LinkedList<Stop> neighbors = graph.getAdjList().get(0);
         for (Stop stop : neighbors) {
-            int v = neighbors.indexOf(stop);
+            int v = stop.getId();
             Route route = graph.getRoute(0, v);
             if (route == null) continue;
 
@@ -277,7 +261,7 @@ public class PathFinder {
 
             neighbors = graph.getAdjList().get(edge.dest);
             for (Stop stop : neighbors) {
-                int v = neighbors.indexOf(stop);
+                int v = stop.getId();
                 if (!visited[v]) {
                     Route route = graph.getRoute(edge.dest, v);
                     if (route == null) continue;
@@ -291,17 +275,15 @@ public class PathFinder {
         return mst;
     }
 
-    // Algoritmo de Kruskal
     public List<Edge> kruskal(boolean useDistance) {
         List<Edge> mst = new ArrayList<>();
         PriorityQueue<Edge> pq = new PriorityQueue<>();
         DisjointSet ds = new DisjointSet(V);
 
-        // Agregar todas las aristas a la cola de prioridad
         for (int u = 0; u < V; u++) {
             LinkedList<Stop> neighbors = graph.getAdjList().get(u);
             for (Stop stop : neighbors) {
-                int v = neighbors.indexOf(stop);
+                int v = stop.getId();
                 Route route = graph.getRoute(u, v);
                 if (route == null) continue;
 
@@ -325,7 +307,6 @@ public class PathFinder {
         return mst;
     }
 
-    // Método para imprimir el camino de Floyd-Warshall
     public void printFloydWarshallPath(int[][] next, int src, int dest) {
         if (next[src][dest] == -1) {
             System.out.println("No existe camino entre estos vértices");
@@ -351,7 +332,6 @@ public class PathFinder {
         System.out.println();
     }
 
-    // Método para imprimir el árbol de expansión mínima
     public void printMST(List<Edge> mst) {
         System.out.println("Árbol de expansión mínima:");
         int totalWeight = 0;
