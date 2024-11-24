@@ -27,7 +27,7 @@ public class Stop implements Serializable{
 		return id;
 	}
 
-	public void setI0(String id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

@@ -138,6 +138,16 @@ public class Graph implements Serializable{
     }
 */
 
+	public ArrayList<Stop> getStops() {
+		ArrayList<Stop> myStops = new ArrayList<>();
+		
+		for(Stop s : stops) {
+			myStops.add(s);
+		}
+		
+		return myStops;
+	}
+    
 	public ArrayList<String> getStopsName() {
 		ArrayList<String> stopNames = new ArrayList<>();
 		

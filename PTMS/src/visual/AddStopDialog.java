@@ -18,7 +18,7 @@ public class AddStopDialog extends Stage{
     private Button addButton;
     private Button cancelButton;
 
-    public AddStopDialog(MainScreen app) {
+    public AddStopDialog(MainScreen app, Stop selectedStop) {
         setTitle("Agregar Parada");
         initModality(Modality.APPLICATION_MODAL);
         
@@ -33,9 +33,9 @@ public class AddStopDialog extends Stage{
         
         // Set action for the Add button
         addButton.setOnAction(e -> {
-        	Stop stop = new Stop(idField.getText(), labelField.getText());
-            app.selectedStop = stop;
-            app.waitForUserAction(0);
+        	selectedStop.setId(idField.getText());
+        	selectedStop.setLabel(labelField.getText());
+            app.addStop(selectedStop);
             close();
         });
         
