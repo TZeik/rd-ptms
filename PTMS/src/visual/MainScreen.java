@@ -36,6 +36,7 @@ import logic.Stop;
 public class MainScreen extends Application{
     public Stop selectedStop;
     private Circle selectedNode;
+    private Circle symbol;
     private BorderPane root;
 	private Pane graphPane;
     private VBox infoPane;
@@ -47,6 +48,9 @@ public class MainScreen extends Application{
     private Button editNodeButton;
     private Button addEdgeButton;
     private Button editEdgeButton;
+    private Button actionButton1;
+    private Button actionButton2;
+    private Button actionButton3;
     
     ArrayList<Circle> graphNodes;
     ArrayList<Line> graphEdges;
@@ -87,29 +91,36 @@ public class MainScreen extends Application{
         BorderPane symbolPane = new BorderPane();
         symbolPane.setPrefSize(100, 200);
         symbolPane.setStyle("-fx-background-color: #e0e0e0; -fx-border-color: #666666;");
-
-        // Add a simple shape as a placeholder for the symbol
-        Circle symbol = new Circle(100, 100, 20);
+        
+        // Info Symbol
+        symbol = new Circle(100, 100, 20);
         symbolPane.setCenter(symbol);
-
+        
         // Add labels for information
-        infoLabel1 = new Label("ID\n");
-        infoLabel2 = new Label("Parada\n");
-        infoLabel3 = new Label("Coordenadas\n\n"+"x ="+"\n"+"y =");
+        infoLabel1 = new Label("");
+        infoLabel2 = new Label("");
+        infoLabel3 = new Label("");
+        infoLabel1.setText("Ninguna Parada Seleccionada");
+        infoLabel2.setText("");
+        infoLabel3.setText("");
         
         infoLabel1.setPadding(new Insets(20, 0, 5, 0));
         infoLabel2.setPadding(new Insets(10, 0, 5, 0));
         infoLabel3.setPadding(new Insets(10, 0, 100, 0));
 
         // Add buttons below the labels
-        Button actionButton1 = new Button("Agregar Ruta");
-        Button actionButton2 = new Button("Editar Parada");
-        Button actionButton3 = new Button("Eliminar Parada");
+        actionButton1 = new Button("Agregar Ruta");
+        actionButton2 = new Button("Editar Parada");
+        actionButton3 = new Button("Eliminar Parada");
         
         double buttonWidth = 300; // Desired width for buttons
         actionButton1.setPrefWidth(buttonWidth);
         actionButton2.setPrefWidth(buttonWidth);
         actionButton3.setPrefWidth(buttonWidth);
+        
+        actionButton1.setVisible(false);
+        actionButton2.setVisible(false);
+        actionButton3.setVisible(false);
         
         VBox buttonBox = new VBox(20); // Increased spacing between buttons
         buttonBox.setAlignment(Pos.CENTER);
@@ -324,13 +335,22 @@ public class MainScreen extends Application{
     private void updateInfo() {
     	// This Method updates the infoPane with the details of the selected stop
     	if(selectedStop != null) {
+    		symbol.setStyle(selectedNode.getStyle());
+    		actionButton1.setVisible(true);
+            actionButton2.setVisible(true);
+            actionButton3.setVisible(true);
     		infoLabel1.setText("ID\n"+selectedStop.getId());
             infoLabel2.setText("Parada\n"+selectedStop.getLabel());
             infoLabel3.setText("Coordenadas\n\n"+"x ="+selectedStop.getX()+"\n"+"y ="+selectedStop.getY());
+            
     	}else {
-    		infoLabel1.setText("ID\n");
-            infoLabel2.setText("Parada\n");
-            infoLabel3.setText("Coordenadas\n\n"+"x ="+"\n"+"y =");
+    		symbol.setStyle("-fx-fill: #a3a8ab;");
+    		actionButton1.setVisible(false);
+            actionButton2.setVisible(false);
+            actionButton3.setVisible(false);
+    		infoLabel1.setText("Ninguna Parada Seleccionada");
+            infoLabel2.setText("");
+            infoLabel3.setText("");
     	}
     }
     
