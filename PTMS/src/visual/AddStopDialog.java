@@ -13,7 +13,6 @@ import logic.PTMS;
 import logic.Stop;
 
 public class AddStopDialog extends Stage{
-	private TextField idField;
 	private TextField labelField;
     private Button addButton;
     private Button cancelButton;
@@ -22,18 +21,14 @@ public class AddStopDialog extends Stage{
         setTitle("Agregar Parada");
         initModality(Modality.APPLICATION_MODAL);
         
-        idField = new TextField();
         labelField = new TextField();
-        addButton = new Button("Agregar");
+        addButton = new Button("Crear");
         cancelButton = new Button("Cancelar");
-        
-        idField.setText(PTMS.getInstance().generateStopID());
-        idField.setEditable(false);
         
         
         // Set action for the Add button
         addButton.setOnAction(e -> {
-        	selectedStop.setId(idField.getText());
+        	selectedStop.setId(PTMS.getInstance().generateStopID());
         	selectedStop.setLabel(labelField.getText());
             app.addStop(selectedStop);
             close();
@@ -48,13 +43,12 @@ public class AddStopDialog extends Stage{
         HBox mybuttons = new HBox(5);
         layout.setPadding(new Insets(10));
         layout.getChildren().addAll(
-        	new Label("ID:"), idField,
         	new Label("Nombre:"), labelField,
             mybuttons
         );
         mybuttons.getChildren().addAll(addButton, cancelButton);
 
-        Scene scene = new Scene(layout, 300, 180);
+        Scene scene = new Scene(layout, 300, 110);
         setScene(scene);
     }
 }

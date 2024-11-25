@@ -23,7 +23,6 @@ public class EditStopDialog extends Stage{
 	private TextField labelField;
     private Button saveButton;
     private Button moveButton;
-    private Button deleteButton;
     private Button cancelButton;
     
     public EditStopDialog(MainScreen app) {
@@ -34,7 +33,6 @@ public class EditStopDialog extends Stage{
         labelField = new TextField(app.selectedStop.getLabel());
         saveButton = new Button("Guardar");
         moveButton = new Button("Mover");
-        deleteButton = new Button("Eliminar");
         cancelButton = new Button("Cancelar");
         
         idField.setEditable(false);
@@ -48,24 +46,8 @@ public class EditStopDialog extends Stage{
         });
         
         moveButton.setOnAction(e -> {
-        	app.waitForUserAction(1);
+        	app.waitForUserAction(2);
             close();
-        });
-        
-        deleteButton.setOnAction(e -> {
-        	Alert alert = new Alert(AlertType.CONFIRMATION);
-        	alert.setTitle("Eliminar " + app.selectedStop.getLabel());
-        	alert.setHeaderText("¿Estás seguro de que quieres eliminar " + app.selectedStop.getLabel() + "?");
-        	alert.setContentText("Esta acción no puede deshacerse");
-        	ButtonType yesButton = new ButtonType("Sí");
-        	ButtonType noButton = new ButtonType("No");
-        	alert.getButtonTypes().setAll(yesButton, noButton);
-        	
-        	Optional<ButtonType> result = alert.showAndWait();
-        	if(result.isPresent() && result.get() == yesButton) {
-        		app.deleteStop(app.selectedStop);
-        		close();
-        	}
         });
         
         cancelButton.setOnAction(e -> {
@@ -81,7 +63,7 @@ public class EditStopDialog extends Stage{
         	new Label("Nombre:"), labelField,
             mybuttons
         );
-        mybuttons.getChildren().addAll(saveButton, moveButton, deleteButton, cancelButton);
+        mybuttons.getChildren().addAll(saveButton, moveButton, cancelButton);
 
         Scene scene = new Scene(layout, 300, 180);
         setScene(scene);

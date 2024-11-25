@@ -2,18 +2,21 @@ package logic;
 
 import java.io.Serializable;
 
+import javafx.scene.shape.Line;
+
 public class Route implements Serializable {
     private static final long serialVersionUID = 852477390490216637L;
     private String id;
     private int distance;
     private int travelTime;
     private int tranship;
-    private int src;
-    private int dest;
+    private Stop src;
+    private Stop dest;
     private String label;
+    private Line Visual;
     private WeatherTrafficEvent currentEvent;
 
-    public Route(String id, int distance, int src, int dest, String label) {
+    public Route(String id, int distance, Stop src, Stop dest, String label) {
         this.id = id;
         this.distance = distance;
         this.travelTime = 1;
@@ -52,19 +55,19 @@ public class Route implements Serializable {
         this.tranship = tranship;
     }
 
-    public int getSrc() {
+    public Stop getSrc() {
         return src;
     }
 
-    public void setSrc(int src) {
+    public void setSrc(Stop src) {
         this.src = src;
     }
 
-    public int getDest() {
+    public Stop getDest() {
         return dest;
     }
 
-    public void setDest(int dest) {
+    public void setDest(Stop dest) {
         this.dest = dest;
     }
 
@@ -95,6 +98,14 @@ public class Route implements Serializable {
     public void updateEvent() {
         currentEvent.generateRandomEvent();
     }
+    
+	public Line getVisual() {
+		return Visual;
+	}
+
+	public void setVisual(Line visual) {
+		Visual = visual;
+	}
 
     @Override
     public String toString() {
@@ -108,4 +119,5 @@ public class Route implements Serializable {
                ", dest=" + dest + 
                ", label=" + label + "]";
     }
+
 }

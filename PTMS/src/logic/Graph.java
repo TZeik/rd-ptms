@@ -31,8 +31,8 @@ public class Graph implements Serializable{
     }
 
     public void addRoute(Route route) {
-        LinkedList<Stop> currentList = adjList.get(route.getSrc());
-        Stop dstStop = adjList.get(route.getDest()).get(0);
+        LinkedList<Stop> currentList = adjList.get(PTMS.getInstance().getGraph().getStopIndex(route.getSrc()));
+        Stop dstStop = adjList.get(PTMS.getInstance().getGraph().getStopIndex(route.getDest())).get(0);
         currentList.add(dstStop);
         
         // Almacenar la ruta en el mapa
@@ -43,24 +43,35 @@ public class Graph implements Serializable{
     }
     
     public void deleteStop(Stop stop) {
-    	LinkedList<Stop> currentList = null;
-    	for(LinkedList<Stop> stops : adjList) {
-    		if(stop.getId().equals(stops.get(0).getId())) {
-    			currentList = stops;
-    		}
-    	}
+    	LinkedList<Stop> deletionList = null;
     	
-    	if(currentList != null) {
-    		adjList.remove(currentList);
-    		this.stops.remove(stop);		
+    	for(LinkedList<Stop> currentList : adjList) {
+    		if(currentList.indexOf(stop) == 0) {
+				deletionList = currentList;
+    		}
+    		for(Stop s : currentList) {
+    			if(s.equals(stop) && currentList.indexOf(stop) != 0) {
+    					deleteRoute(currentList.get(0), stop);
+    				}
+    			}
+    		}
+    	
+    	while(deletionList.isEmpty() == false && deletionList != null) {
+    		if(deletionList.getLast() == stop) {
+    			break;
+    		}
+    		String routeKey = searchRouteId(stop, deletionList.getLast());
+    		routes.remove(routeKey);
+    		deletionList.removeLast();
     	}
+    	adjList.remove(deletionList);
+    	stops.remove(stop);
     }
     
     // Eliminar una ruta en la lista de adyacencia y en el mapa
-    public void deleteRoute(int src, int dest) {
-    	LinkedList<Stop> currentList = adjList.get(src);
-    	Stop targetStop = adjList.get(dest).get(0);
-    	currentList.remove(targetStop);
+    public void deleteRoute(Stop src, Stop dest) {
+    	LinkedList<Stop> currentList = adjList.get(getStopIndex(src));
+    	currentList.remove(dest);
     	String routeKey = searchRouteId(src, dest);
     	routes.remove(routeKey);
     }
@@ -82,17 +93,16 @@ public class Graph implements Serializable{
     	Route oldRoute = routes.get(routeKey);
     	if(oldRoute != null) {
     		routes.put(routeKey, update);
-        	LinkedList<Stop> currentList = adjList.get(oldRoute.getSrc());
-        	Stop targetStop = adjList.get(oldRoute.getDest()).get(0);
+        	LinkedList<Stop> currentList = adjList.get(PTMS.getInstance().getGraph().getStopIndex(oldRoute.getSrc()));
+        	Stop targetStop = adjList.get(PTMS.getInstance().getGraph().getStopIndex(oldRoute.getSrc())).get(0);
         	int index = currentList.indexOf(targetStop);
-        	currentList.remove(targetStop);
-        	currentList = adjList.get(update.getSrc());
-        	targetStop = adjList.get(update.getDest()).get(0);
-        	currentList.add(index, targetStop);
+        	currentList = adjList.get(PTMS.getInstance().getGraph().getStopIndex(update.getSrc()));
+        	targetStop = adjList.get(PTMS.getInstance().getGraph().getStopIndex(update.getDest())).get(0);
+        	currentList.set(index, targetStop);
     	}	
     }
     
-    public Route getRoute(int src, int dest) {
+    public Route getRoute(Stop src, Stop dest) {
         String routeKey = searchRouteId(src, dest);
         return routes.get(routeKey);
     }
@@ -118,7 +128,7 @@ public class Graph implements Serializable{
     	return null;
     }
     
-    public String searchRouteId(int src, int dest) {
+    public String searchRouteId(Stop src, Stop dest) {
     	for(Entry<String, Route> entry : routes.entrySet()) {
     		if(entry.getValue().getSrc() == src && entry.getValue().getDest() == dest) {
     			return entry.getKey();
@@ -168,14 +178,24 @@ public class Graph implements Serializable{
 		return stopId;
 	}
 	
+	public int getStopIndex(Stop s) {
+		int index = 0;	
+		for(LinkedList<Stop> currentList : adjList) {
+            if(s.equals(currentList.get(0))) {
+            	return index;
+            }
+            index++;
+        }
+		return -1;
+	}
+	
     public void print() {
         System.out.println("Estado actual del sistema de transporte:");
         for(LinkedList<Stop> currentList : adjList) {
             for(Stop stop : currentList) {
                 System.out.print(stop.getLabel());
-                if(currentList.indexOf(stop) != currentList.size() - 1) {
-                    Route route = getRoute(currentList.indexOf(stop), 
-                                        currentList.indexOf(currentList.get(currentList.indexOf(stop) + 1)));
+                if(currentList.indexOf(stop) != currentList.size() - 1 && stop != currentList.get(0)) {
+                    Route route = getRoute(currentList.get(0), stop);
                     if (route != null) {
                         System.out.print(" -> [" + route.getCurrentEvent() + "] -> ");
                     } else {
