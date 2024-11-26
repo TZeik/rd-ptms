@@ -14,19 +14,16 @@ public class Graph implements Serializable{
 	private static final long serialVersionUID = -7910866032838849710L;
 	private ArrayList<LinkedList<Stop>> adjList;
     private Map<String, Route> routes;
-    private ArrayList<Stop> stops;
 
     public Graph() {
         adjList = new ArrayList<>();
         routes = new HashMap<>();
-        stops = new ArrayList<>();
     }
 
     public void addStop(Stop stop) {
         LinkedList<Stop> currentList = new LinkedList<>();
         currentList.add(stop);
         adjList.add(currentList);
-        stops.add(stop);
         PTMS.getInstance().setStopIdGenerator(PTMS.getInstance().getStopIdGenerator()+1);
     }
 
@@ -65,7 +62,6 @@ public class Graph implements Serializable{
     		deletionList.removeLast();
     	}
     	adjList.remove(deletionList);
-    	stops.remove(stop);
     }
     
     // Eliminar una ruta en la lista de adyacencia y en el mapa
@@ -111,10 +107,6 @@ public class Graph implements Serializable{
         return routes;
     }
 
-    public Stop getStop(int id) {
-        return stops.get(id);
-    }
-
     public ArrayList<LinkedList<Stop>> getAdjList() {
         return adjList;
     }
@@ -136,46 +128,15 @@ public class Graph implements Serializable{
     	}
     	return "0";
     }
-/*
-    public void print() {
-        for(LinkedList<Stop> currentList : adjList) {
-            for(Stop stop : currentList) {
-            	System.out.print(stop.getLabel());
-            	if(currentList.indexOf(stop) != currentList.size() - 1) System.out.print(" -> ");
-            }
-            System.out.println();
-        }
-    }
-*/
 
 	public ArrayList<Stop> getStops() {
 		ArrayList<Stop> myStops = new ArrayList<>();
 		
-		for(Stop s : stops) {
-			myStops.add(s);
+		for(LinkedList<Stop> currentList : adjList) {
+			myStops.add(currentList.getFirst());
 		}
 		
 		return myStops;
-	}
-    
-	public ArrayList<String> getStopsName() {
-		ArrayList<String> stopNames = new ArrayList<>();
-		
-		for(Stop s : stops) {
-			stopNames.add(s.getLabel());
-		}
-		
-		return stopNames;
-	}
-	
-	public ArrayList<String> getStopsId() {
-		ArrayList<String> stopId = new ArrayList<>();
-		
-		for(Stop s : stops) {
-			stopId.add(s.getId());
-		}
-		
-		return stopId;
 	}
 	
 	public int getStopIndex(Stop s) {
