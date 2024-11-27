@@ -41,8 +41,11 @@ import logic.Stop;
 
 public class MainScreen extends Application{
     public Stop selectedStop;
+    public Route selectedRoute;
     private Circle selectedNode;
-    private Circle symbol;
+    private Circle nodeSymbol;
+    private Line selectedEdge;
+    private Line edgeSymbol;
     private BorderPane root;
 	private Pane graphPane;
     private VBox infoPane;
@@ -61,6 +64,7 @@ public class MainScreen extends Application{
     
     TableView<Stop> table;
     ObservableList<Stop> tableData;
+    BorderPane symbolPane;
     
     Label infoLabel1;
     Label infoLabel2;
@@ -86,7 +90,7 @@ public class MainScreen extends Application{
         // Center Panel: Graph view
         graphPane = new Pane();
         graphPane.setStyle("-fx-background-color: lightgray;");
-        graphPane.setOnMouseClicked(this::handleNodeClick);
+        graphPane.setOnMouseClicked(this::handleObjectClick);
 
         // Right Panel: Stop info/details
         infoPane = new VBox();
@@ -95,13 +99,16 @@ public class MainScreen extends Application{
         infoPane.setPrefWidth(300); // Set a fixed width for the info pane
         
      // Add a BorderPane for the symbol display
-        BorderPane symbolPane = new BorderPane();
+        symbolPane = new BorderPane();
         symbolPane.setPrefSize(100, 200);
         symbolPane.setStyle("-fx-background-color: #e0e0e0; -fx-border-color: #666666;");
         
         // Info Symbol
-        symbol = new Circle(100, 100, 20);
-        symbolPane.setCenter(symbol);
+        nodeSymbol = new Circle(100, 100, 20);
+        edgeSymbol = new Line(70,50,170,135);
+        edgeSymbol.setStrokeWidth(10);
+        
+        symbolPane.setCenter(nodeSymbol);
         
         // Add labels for information
         infoLabel1 = new Label("");
@@ -304,7 +311,7 @@ public class MainScreen extends Application{
     	selectedStop = null;
     	root.setTop(blankBox);
         graphPane.setCursor(Cursor.DEFAULT);
-        graphPane.setOnMouseClicked(this::handleNodeClick);
+        graphPane.setOnMouseClicked(this::handleObjectClick);
     }
     
     private void handleAddStop(MouseEvent event) {
@@ -330,10 +337,10 @@ public class MainScreen extends Application{
         
         Circle lastNode = selectedNode;
         
-        for (Circle node : PTMS.getInstance().getStopVisuals()) {
+        for (Circle node : PTMS.getInstance().getGraph().getStopVisuals()) {
             if (node.contains(clickX, clickY)) {
                 selectNode(node);  // Select the clicked node
-                selectedStop = PTMS.getInstance().getStopbyVisual(node);
+                selectedStop = PTMS.getInstance().getGraph().getStopbyVisual(node);
             }
         }
         if(lastNode != null && lastNode.equals(selectedNode)) {
@@ -346,22 +353,38 @@ public class MainScreen extends Application{
         }
     };
     
-    private void handleNodeClick(MouseEvent event) {
+    private void handleObjectClick(MouseEvent event) {
     	
         double clickX = event.getX();
         double clickY = event.getY();
         
         Circle lastNode = selectedNode;
+        Line lastRoute = selectedEdge;
         
-        for (Circle node : PTMS.getInstance().getStopVisuals()) {
+        for (Circle node : PTMS.getInstance().getGraph().getStopVisuals()) {
             if (node.contains(clickX, clickY)) {
                 selectNode(node);  // Select the clicked node
-                selectedStop = PTMS.getInstance().getStopbyVisual(node);
+                selectedStop = PTMS.getInstance().getGraph().getStopbyVisual(node);
             }
         }
+        
         if(lastNode != null && lastNode.equals(selectedNode)) {
         	selectNode(null);
         	selectedStop = null;
+        }
+        
+        for(Line edge : PTMS.getInstance().getGraph().getRouteVisuals()) {
+        	if(edge.contains(clickX, clickY)) {
+        		if(selectedStop == null) {
+        			selectEdge(edge);
+        			selectedRoute = PTMS.getInstance().getGraph().getRoutebyVisual(edge);
+        		}
+        	}
+        }
+        	
+        if(lastRoute != null && lastRoute.equals(selectedEdge)) {
+        	selectEdge(null);
+        	selectedRoute = null;
         }
         
         updateInfo();
@@ -385,23 +408,50 @@ public class MainScreen extends Application{
     	}
     }
     
+    private void selectEdge(Line edge) {
+    	if(edge != null) selectedEdge = edge; else selectedEdge = null;
+    	updateGraph();
+    }
+    
     private void updateInfo() {
+		symbolPane.getChildren().clear();
     	// This Method updates the infoPane with the details of the selected stop
-    	if(selectedStop != null && selectedNode != null) {
-    		symbol.setStyle(selectedNode.getStyle());
-    		actionButton1.setVisible(true);
-            actionButton2.setVisible(true);
-            actionButton3.setVisible(true);
-    		infoLabel1.setText("ID\n"+selectedStop.getId());
-            infoLabel2.setText("Parada\n"+selectedStop.getLabel());
-            infoLabel3.setText("Coordenadas\n\n"+"x ="+selectedStop.getX()+"\n"+"y ="+selectedStop.getY());
+    	if((selectedStop != null && selectedNode != null) || (selectedRoute != null && selectedEdge != null)) {
+    		
+    		if(selectedStop != null && selectedNode != null) {
+  
+    			symbolPane.setCenter(nodeSymbol);
+    			nodeSymbol.setStyle(selectedNode.getStyle());
+        		actionButton1.setVisible(true);
+                actionButton2.setVisible(true);
+                actionButton3.setVisible(true);
+        		infoLabel1.setText("ID\n"+selectedStop.getId());
+                infoLabel2.setText("Parada\n"+selectedStop.getLabel());
+                infoLabel3.setText("Coordenadas\n\n"+"x ="+selectedStop.getX()+"\n"+"y ="+selectedStop.getY());
+    		}
+    		
+    		if(selectedRoute != null && selectedEdge != null) {
+    			
+    			Polygon arrowhead = createArrowhead(edgeSymbol.getStartX(), edgeSymbol.getStartY(), edgeSymbol.getEndX(), edgeSymbol.getEndY());
+    			edgeSymbol.setStyle("-fx-stroke: #e66161; -fx-stroke-width: 8;");
+    			arrowhead.setStyle("-fx-stroke: #e66161; -fx-stroke-width: 15;");
+    			symbolPane.getChildren().addAll(edgeSymbol, arrowhead);
+        		actionButton1.setVisible(true);
+                actionButton2.setVisible(true);
+                actionButton3.setVisible(true);
+        		infoLabel1.setText("ID\n"+selectedRoute.getId());
+                infoLabel2.setText("Ruta\n"+selectedRoute.getLabel());
+                infoLabel3.setText("Distancia\n"+selectedRoute.getDistance());
+    		}
+    		
             
     	}else {
-    		symbol.setStyle("-fx-fill: #a3a8ab;");
+    		symbolPane.setCenter(nodeSymbol);
+    		nodeSymbol.setStyle("-fx-fill: #a3a8ab;");
     		actionButton1.setVisible(false);
             actionButton2.setVisible(false);
             actionButton3.setVisible(false);
-    		infoLabel1.setText("Ninguna Parada Seleccionada");
+    		infoLabel1.setText("Ninguna Parada/Ruta Seleccionada");
             infoLabel2.setText("");
             infoLabel3.setText("");
     	}
@@ -419,9 +469,7 @@ public class MainScreen extends Application{
     
     public void addRoute(Route route) {
     	Line visual = new Line(route.getSrc().getX(), route.getSrc().getY(), route.getDest().getX(), route.getDest().getY());
-        visual.setStyle("-fx-stroke: #2c3e50; -fx-stroke-width: 2;");
-        visual.setStroke(Color.BLACK);
-        visual.setStrokeWidth(2);
+        visual.setStyle("-fx-stroke: #2c3e50; -fx-stroke-width: 6;");
         route.setVisual(visual);
         PTMS.getInstance().getGraph().addRoute(route);
         graphEdges.add(visual);
@@ -453,15 +501,16 @@ public class MainScreen extends Application{
     }
     
     private void remakeRoutes() {
-    	graphEdges.removeAll(graphEdges);
+    	graphEdges.clear();
     	Line currentRoute;
     	for(LinkedList<Stop> currentList : PTMS.getInstance().getGraph().getAdjList()) {
     		for(Stop stop : currentList) {
     			if(stop != currentList.get(0)) {
-    				currentRoute = new Line(currentList.get(0).getX(), currentList.get(0).getY(), stop.getX(), stop.getY());
-        			currentRoute.setStyle("-fx-stroke: #2c3e50; -fx-stroke-width: 2;");
-        	        currentRoute.setStroke(Color.BLACK);
-        	        currentRoute.setStrokeWidth(2);
+    				Stop start = currentList.get(0);
+    				Stop end = stop;
+    				currentRoute = PTMS.getInstance().getGraph().getRoute(start, end).getVisual();
+    				currentRoute.setStartX(start.getX()); currentRoute.setStartY(start.getY());
+    				currentRoute.setEndX(end.getX()); currentRoute.setEndY(end.getY());
         	        graphEdges.add(currentRoute);
     			}
     		}
@@ -472,18 +521,25 @@ public class MainScreen extends Application{
     	tableData = FXCollections.observableArrayList(PTMS.getInstance().getGraph().getStops());
     	table.setItems(tableData);
     	table.refresh();
-    	graphPane.getChildren().removeAll(graphPane.getChildren());
+    	graphPane.getChildren().clear();
     	
     	// Adding nodes to the graphPane
-    		graphPane.getChildren().addAll(graphNodes);
+    	graphPane.getChildren().addAll(graphNodes);
     	// Adding edges to the graphPane
-    		for(Line l : graphEdges) {
-    			Polygon arrowhead = createArrowhead(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY());
-    	        // Add the edge and the arrowhead to the root pane
-    			graphPane.getChildren().addAll(l, arrowhead);
-    		}
+    	for(Line l : graphEdges) {
+   			Polygon arrowhead = createArrowhead(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY());
+   			if(selectedEdge != null && selectedEdge.equals(l)) {
+   				l.setStyle("-fx-stroke: #e66161; -fx-stroke-width: 6;");
+   				arrowhead.setStyle("-fx-stroke: #e66161; -fx-stroke-width: 6;");
+   			}else {
+   				l.setStyle("-fx-stroke: #2c3e50; -fx-stroke-width: 6;");
+   				arrowhead.setStyle("-fx-stroke: #2c3e50; -fx-stroke-width: 6;");
+   			}
+    	    // Add the edge and the arrowhead to the root pane
+    		graphPane.getChildren().addAll(l, arrowhead);
+   		}
     }
-    
+
     private void updateEdges() {
     	graphEdges.clear();
     	for(Entry<String, Route> entry : PTMS.getInstance().getGraph().getRoutes().entrySet()) {
@@ -493,8 +549,8 @@ public class MainScreen extends Application{
     
     private Polygon createArrowhead(double startX, double startY, double endX, double endY) {
         // Arrowhead size
-        double arrowLength = 10;  // Length of the arrowhead
-        double arrowWidth = 8;    // Width of the arrowhead
+        double arrowLength = 14;  // Length of the arrowhead
+        double arrowWidth = 12;    // Width of the arrowhead
 
         // Calculate the angle of the edge
         double angle = Math.atan2(endY - startY, endX - startX);
@@ -520,8 +576,6 @@ public class MainScreen extends Application{
                 arrowX1 + baseOffsetX1, arrowY1 + baseOffsetY1,  // Left side of the arrowhead
                 arrowX2 + baseOffsetX2, arrowY2 + baseOffsetY2   // Right side of the arrowhead
         );
-
-        arrowhead.setFill(Color.BLACK);
 
         return arrowhead;
     }

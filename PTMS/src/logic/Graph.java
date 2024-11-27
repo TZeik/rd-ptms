@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
+
 public class Graph implements Serializable{
     /**
 	 * 
@@ -149,6 +152,45 @@ public class Graph implements Serializable{
         }
 		return -1;
 	}
+	
+	public ArrayList<Circle> getStopVisuals(){
+		ArrayList<Circle> myCircles = new ArrayList<>();
+		
+		for(LinkedList<Stop> stop : adjList) {
+			myCircles.add(stop.get(0).getVisual());
+		}
+		
+		return myCircles;
+	}
+	
+	public Stop getStopbyVisual(Circle circle) {
+	
+		for(LinkedList<Stop> stop : adjList) {
+			if(stop.get(0).getVisual().equals(circle)) return stop.get(0);
+		}
+		
+		return null;
+	}
+	
+	public ArrayList<Line> getRouteVisuals(){
+		ArrayList<Line> myLines = new ArrayList<>();
+		
+		for(Entry<String, Route> entry : routes.entrySet()) {
+    		myLines.add(entry.getValue().getVisual());
+    	}
+		
+		return myLines;
+	}
+	
+	public Route getRoutebyVisual(Line line){
+		
+		for(Entry<String, Route> entry : routes.entrySet()) {
+    		if(entry.getValue().getVisual().equals(line)) return entry.getValue();
+    	}
+		
+		return null;
+	}
+	
 	
     public void print() {
         System.out.println("Estado actual del sistema de transporte:");
