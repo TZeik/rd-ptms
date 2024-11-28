@@ -1,9 +1,6 @@
 package logic;
 
 import java.io.Serializable;
-import java.util.LinkedList;
-
-import javafx.scene.shape.Circle;
 
 public class Stop implements Serializable{
 	/**
@@ -13,7 +10,6 @@ public class Stop implements Serializable{
 	private String id;
 	private String label;
 	private double x,y;
-	private Circle visual;
 
 	public Stop(String id, String label) {
 		super();
@@ -54,17 +50,14 @@ public class Stop implements Serializable{
 	public void setY(double y) {
 		this.y = y;
 	}
-
-	public Circle getVisual() {
-		return visual;
-	}
-
-	public void setVisual(Circle visual) {
-		this.visual = visual;
-	}
 	
 	public int getIndex() {
 		return PTMS.getInstance().getGraph().getAdjList().get(0).indexOf(this);
 	}
+	
+	@Override
+    public String toString() {
+        return id+" : "+label;
+    }
 
 }

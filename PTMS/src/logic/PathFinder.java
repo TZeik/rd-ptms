@@ -13,21 +13,21 @@ public class PathFinder {
         updateAllEvents();
         
         // Distancia mínima de cada nodo desde el inicio
-        Map<Stop, Integer> distances = new HashMap<>();
+        Map<Stop, Double> distances = new HashMap<>();
         // Nodo previo para reconstruir el camino
         Map<Stop, Stop> previous = new HashMap<>();
         
         // Min-Heap para procesar los nodos en orden de distancia
-        PriorityQueue<Stop> pq = new PriorityQueue<>(Comparator.comparingInt(distances::get));
+        PriorityQueue<Stop> pq = new PriorityQueue<>(Comparator.comparingDouble(distances::get));
         
         // Inicializar distancias
         for (LinkedList<Stop> list : graph.getAdjList()) {
             for (Stop stop : list) {
-                distances.put(stop, Integer.MAX_VALUE); // Infinito
+                distances.put(stop, Double.MAX_VALUE); // Infinito
                 previous.put(stop, null);
             }
         }
-        distances.put(start, 0);
+        distances.put(start, 0.0);
         pq.add(start);
         
         // Procesar la cola de prioridad
@@ -43,7 +43,7 @@ public class PathFinder {
             for (Stop neighbor : graph.getNeighbors(current)) {
                 Route route = graph.getRoute(current, neighbor);
                 if (route != null) {
-                    int newDist = distances.get(current) + route.getDistance();
+                    double newDist = distances.get(current) + (route.getDistance() * route.getCurrentEvent().getDelayFactor());
                     if (newDist < distances.get(neighbor)) {
                         distances.put(neighbor, newDist);
                         previous.put(neighbor, current);
@@ -69,19 +69,20 @@ public class PathFinder {
     }
     
     public List<Stop> bellmanFord(Stop start, Stop end) {
+    	updateAllEvents();
         // Distancia mínima de cada nodo desde el inicio
-        Map<Stop, Integer> distances = new HashMap<>();
+        Map<Stop, Double> distances = new HashMap<>();
         // Nodo previo para reconstruir el camino
         Map<Stop, Stop> previous = new HashMap<>();
 
         // Inicializar distancias
         for (LinkedList<Stop> list : graph.getAdjList()) {
             for (Stop stop : list) {
-                distances.put(stop, Integer.MAX_VALUE); // Infinito
+                distances.put(stop, Double.MAX_VALUE); // Infinito
                 previous.put(stop, null);
             }
         }
-        distances.put(start, 0);
+        distances.put(start, 0.0);
 
         // Obtener todas las aristas del grafo
         List<Route> allRoutes = new ArrayList<>();
@@ -102,8 +103,8 @@ public class PathFinder {
                 Stop from = route.getSrc(); // Obtener nodo origen
                 Stop to = route.getDest();   // Obtener nodo destino
 
-                if (distances.get(from) != Integer.MAX_VALUE && distances.get(from) + route.getDistance() < distances.get(to)) {
-                    distances.put(to, distances.get(from) + route.getDistance());
+                if (distances.get(from) != Double.MAX_VALUE && distances.get(from) + route.getDistance() * route.getCurrentEvent().getDelayFactor() < distances.get(to)) {
+                    distances.put(to, distances.get(from) + route.getDistance() * route.getCurrentEvent().getDelayFactor());
                     previous.put(to, from);
                 }
             }
@@ -114,13 +115,13 @@ public class PathFinder {
             Stop from = route.getSrc();
             Stop to = route.getDest();
 
-            if (distances.get(from) != Integer.MAX_VALUE && distances.get(from) + route.getDistance() < distances.get(to)) {
+            if (distances.get(from) != Double.MAX_VALUE && distances.get(from) + route.getDistance() * route.getCurrentEvent().getDelayFactor()< distances.get(to)) {
                 System.out.println("El grafo contiene ciclos negativos.");
                 return Collections.emptyList(); // Ciclo negativo detectado
             }
         }
 
-        // Reconstruir el camino desde el mapa de predecesores
+        // Reconstruir el camino desde el mapa de predecessors
         List<Stop> path = new ArrayList<>();
         for (Stop at = end; at != null; at = previous.get(at)) {
             path.add(at);
@@ -136,12 +137,13 @@ public class PathFinder {
     }
 
     public List<Stop> floydWarshall(Stop start, Stop end) {
+    	updateAllEvents();
         // Lista de nodos
         List<Stop> stops = graph.getStops();
         int n = stops.size();
 
         // Inicializar las matrices de distancias y predecesores
-        int[][] dist = new int[n][n];
+        double[][] dist = new double[n][n];
         Stop[][] pred = new Stop[n][n];
 
         // Mapear cada parada a un índice
@@ -154,9 +156,9 @@ public class PathFinder {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 if (i == j) {
-                    dist[i][j] = 0; // Distancia de un nodo a sí mismo
+                    dist[i][j] = 0.0; // Distancia de un nodo a sí mismo
                 } else {
-                    dist[i][j] = Integer.MAX_VALUE; // Infinito
+                    dist[i][j] = Double.MAX_VALUE; // Infinito
                 }
                 pred[i][j] = null; // Sin predecesor al inicio
             }
@@ -171,7 +173,7 @@ public class PathFinder {
                 if (route != null) {
                     int fromIndex = stopIndexMap.get(from);
                     int toIndex = stopIndexMap.get(to);
-                    dist[fromIndex][toIndex] = route.getDistance();
+                    dist[fromIndex][toIndex] = route.getDistance() * route.getCurrentEvent().getDelayFactor();
                     pred[fromIndex][toIndex] = from;
                 }
             }
@@ -181,7 +183,7 @@ public class PathFinder {
         for (int k = 0; k < n; k++) {
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
-                    if (dist[i][k] != Integer.MAX_VALUE && dist[k][j] != Integer.MAX_VALUE
+                    if (dist[i][k] != Double.MAX_VALUE && dist[k][j] != Double.MAX_VALUE
                             && dist[i][k] + dist[k][j] < dist[i][j]) {
                         dist[i][j] = dist[i][k] + dist[k][j];
                         pred[i][j] = pred[k][j];
@@ -194,7 +196,7 @@ public class PathFinder {
         int startIdx = stopIndexMap.get(start);
         int endIdx = stopIndexMap.get(end);
 
-        if (dist[startIdx][endIdx] == Integer.MAX_VALUE) {
+        if (dist[startIdx][endIdx] == Double.MAX_VALUE) {
             return Collections.emptyList(); // No hay camino
         }
 
@@ -215,7 +217,7 @@ public class PathFinder {
         List<Route> edges = graph.getRoutes();
 
         // Ordenar las aristas por peso
-        edges.sort(Comparator.comparingInt(Route::getDistance));
+        edges.sort(Comparator.comparingDouble(Route::getAdjustedDistance));
 
         // Inicializar estructuras para el MST y el conjunto disjunto
         DisjointSet ds = new DisjointSet(nodes);
@@ -232,7 +234,7 @@ public class PathFinder {
             if (ds.find(from) != ds.find(to)) {
                 ds.union(from, to);
                 mst.get(from).add(edge);
-                mst.get(to).add(edge); // Para grafos no dirigidos
+                mst.get(to).add(edge); // Para grafos dirigidos
             }
         }
 
@@ -240,6 +242,7 @@ public class PathFinder {
     }
     
     public List<Stop> kruskalMST(Stop start, Stop end) {
+    	updateAllEvents();
     	Map<Stop, List<Route>> mst = kruskal();
         List<Stop> path = new ArrayList<>();
         Set<Stop> visited = new HashSet<>();
@@ -307,5 +310,48 @@ public class PathFinder {
         System.out.println("Distancia total recorrida: " + totalDistance + " unidades.");
         System.out.println("Tiempo total de viaje: " + totalTime + " minutos.");
 
+    }
+        
+    public int[] getPathDetails(List<Stop> path) {
+    	int totalDistance = 0;
+    	int totalTime = 0;
+    	
+    	for (int i = 0; i < path.size(); i++) {
+            if (i < path.size() - 1) {
+                // Obtener la ruta entre la parada actual y la siguiente
+                Route route = graph.getRoute(path.get(i), path.get(i + 1));
+                if (route != null) {
+                	totalDistance += route.getDistance();
+                	totalTime += route.getTravelTime() + route.getAdjustedTravelTime();
+                }
+            }
+        }
+    	
+    	return new int[] {totalDistance, totalTime};
+    }
+    
+    public List<String> getRouteDetails(List<Stop> path){
+    	
+    	List<String> routeDetails = new ArrayList<String>();
+    	
+    	for (int i = 0; i < path.size(); i++) {
+            if (i < path.size() - 1) {
+                // Obtener la ruta entre la parada actual y la siguiente
+                Route route = graph.getRoute(path.get(i), path.get(i + 1));
+                if (route != null) {
+                	if(route.getCurrentEvent().getType().getDescription() != "Normal") {
+                		routeDetails.add("En la ruta "+route.getLabel()+" que va desde "+route.getSrc().getLabel()+" hasta "+route.getDest().getLabel());
+                    	routeDetails.add("Se produjo un evento: "+route.getCurrentEvent().getType().getDescription());
+                    	routeDetails.add("Factor de Retraso: "+route.getCurrentEvent().getType().getFactor());
+                    	System.out.println("En la ruta "+route.getLabel()+" que va desde "+route.getSrc().getLabel()+" hasta "+route.getDest().getLabel()+" se produjo un/a "+route.getCurrentEvent().getType().getDescription());
+                    	System.out.println("Factor de Retraso: "+route.getCurrentEvent().getType().getFactor());
+                	}
+                	
+                }
+            }
+        }
+    	
+    	return routeDetails;
+    	
     }
 }

@@ -7,13 +7,12 @@ import javafx.scene.shape.Line;
 public class Route implements Serializable {
     private static final long serialVersionUID = 852477390490216637L;
     private String id;
-    private int distance;
+    private double distance;
     private int travelTime;
     private int tranship;
     private Stop src;
     private Stop dest;
     private String label;
-    private Line Visual;
     private WeatherTrafficEvent currentEvent;
 
     public Route(String id, int distance, Stop src, Stop dest, String label) {
@@ -27,11 +26,15 @@ public class Route implements Serializable {
         this.currentEvent = new WeatherTrafficEvent();
     }
 
-    public int getDistance() {
+    public double getDistance() {
         return distance;
     }
 
-    public void setDistance(int distance) {
+    public double getAdjustedDistance() {
+    	return distance * currentEvent.getDelayFactor();
+    }
+    
+    public void setDistance(double distance) {
         this.distance = distance;
     }
 
@@ -98,14 +101,6 @@ public class Route implements Serializable {
     public void updateEvent() {
         currentEvent.generateRandomEvent();
     }
-    
-	public Line getVisual() {
-		return Visual;
-	}
-
-	public void setVisual(Line visual) {
-		Visual = visual;
-	}
 
     @Override
     public String toString() {

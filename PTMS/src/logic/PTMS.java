@@ -6,11 +6,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Map.Entry;
-
-import javafx.scene.shape.Circle;
 
 public class PTMS implements Serializable{
 	
@@ -22,7 +17,6 @@ public class PTMS implements Serializable{
 	private Graph publicTransportMap;
 	private int stopIdGenerator;
 	private int routeIdGenerator;
-	//private Object selected;
 	
 	public PTMS() {
 		super();

@@ -1,9 +1,9 @@
 package visual;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Map.Entry;
 
@@ -13,13 +13,14 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
@@ -27,16 +28,15 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
+import javafx.stage.WindowEvent;
 import logic.PTMS;
 import logic.PathFinder;
 import logic.Route;
@@ -55,6 +55,15 @@ public class MainScreen extends Application{
     private StackPane instructionBox;
     private StackPane blankBox;
     private Label instructionLabel;
+    private Pane terminalPane;
+    private VBox textContainer;
+    
+    private ComboBox<String> algorythmsCombo;
+    private ComboBox<Stop> initialStopCombo;
+    private ComboBox<Stop> endStopCombo;
+    
+	private Label distanceDetail;
+    private Label timeDetail;
     
     private Button addNodeButton;
     private Button searchPathButton;
@@ -63,14 +72,18 @@ public class MainScreen extends Application{
     private Button actionButton3;
     private Button actionButton4;
     private Button actionButton5;
+    private Button trailblazeButton;
     
-    ArrayList<Circle> graphNodes;
-    ArrayList<Line> graphEdges;
+    Map<Stop,Circle> graphNodes;
+    Map<Route,Line> graphEdges;
     
     TableView<Stop> table;
     ObservableList<Stop> tableData;
     BorderPane symbolPane;
-    
+   
+    Label infoDesc1;
+    Label infoDesc2;
+    Label infoDesc3;
     Label infoLabel1;
     Label infoLabel2;
     Label infoLabel3;
@@ -80,7 +93,12 @@ public class MainScreen extends Application{
     //Definitions
     static final double circleRadius = 20;
     static final double buttonWidth = 300;
-    
+    static final double comboWidth = 325;
+    static final String dijkstra = "Dijkstra";
+    static final String bellmanford = "Bellman Ford";
+    static final String warshall = "Floyd Warshall";
+    static final String kruskal = "Kruskal";
+
     @Override
     public void start(Stage primaryStage) {
     	
@@ -88,8 +106,8 @@ public class MainScreen extends Application{
         primaryStage.setMaximized(true);
         primaryStage.setResizable(false);
         
-        graphNodes = new ArrayList<>();
-        graphEdges = new ArrayList<>();
+        graphNodes = new HashMap<>();
+        graphEdges = new HashMap<>();
         
         // Left Panel: Menu
         VBox menuPane = createMenuPane();
@@ -105,89 +123,9 @@ public class MainScreen extends Application{
         infoPane.setPadding(new Insets(100,20,20,20));
         infoPane.setStyle("-fx-background-color: #f4f4f4; -fx-border-color: #cccccc;");
         infoPane.setPrefWidth(300); // Set a fixed width for the info pane
-        
-     // Add a BorderPane for the symbol display
-        symbolPane = new BorderPane();
-        symbolPane.setPrefSize(100, 200);
-        symbolPane.setStyle("-fx-background-color: #e0e0e0; -fx-border-color: #666666;");
-        
-        // Info Symbol
-        nodeSymbol = new Circle(100, 100, 20);
-        edgeSymbol = new Line(70,50,170,135);
-        edgeSymbol.setStrokeWidth(10);
-        
-        symbolPane.setCenter(nodeSymbol);
-        
-        // Add labels for information
-        infoLabel1 = new Label("");
-        infoLabel2 = new Label("");
-        infoLabel3 = new Label("");
-        infoLabel1.setText("Ninguna Parada Seleccionada");
-        infoLabel2.setText("");
-        infoLabel3.setText("");
-        
-        infoLabel1.setPadding(new Insets(20, 0, 5, 0));
-        infoLabel2.setPadding(new Insets(10, 0, 5, 0));
-        infoLabel3.setPadding(new Insets(10, 0, 100, 0));
-
-        // Stop Info Manager Buttons
-        actionButton1 = new Button("Agregar Ruta");
-        actionButton1.setOnAction(e -> waitForUserAction(1));
-        actionButton2 = new Button("Editar Parada");
-        actionButton2.setOnAction(e -> new EditStopDialog(this).show());
-        actionButton3 = new Button("Eliminar Parada");
-        actionButton3.setOnAction(e -> {
-        	Alert alert = new Alert(AlertType.CONFIRMATION);
-        	alert.setTitle("Eliminar " + selectedStop.getLabel());
-        	alert.setHeaderText("¿Estás seguro de que quieres eliminar " + selectedStop.getLabel() + "?");
-        	alert.setContentText("Esta acción no puede deshacerse");
-        	ButtonType yesButton = new ButtonType("Sí");
-        	ButtonType noButton = new ButtonType("No");
-        	alert.getButtonTypes().setAll(yesButton, noButton);
-        	
-        	Optional<ButtonType> result = alert.showAndWait();
-        	if(result.isPresent() && result.get() == yesButton) {
-        		deleteStop(selectedStop);
-        	}
-        });
-        
-        // Route Info Manager Buttons
-        actionButton4 = new Button("Editar Ruta");
-        actionButton4.setOnAction(e -> new EditRouteDialog(this).show());
-        actionButton5 = new Button("Eliminar Ruta");
-        actionButton5.setOnAction(e -> {
-        	Alert alert = new Alert(AlertType.CONFIRMATION);
-        	alert.setTitle("Eliminar " + selectedRoute.getLabel());
-        	alert.setHeaderText("¿Estás seguro de que quieres eliminar " + selectedRoute.getLabel() + "?");
-        	alert.setContentText("Esta acción no puede deshacerse");
-        	ButtonType yesButton = new ButtonType("Sí");
-        	ButtonType noButton = new ButtonType("No");
-        	alert.getButtonTypes().setAll(yesButton, noButton);
-        	
-        	Optional<ButtonType> result = alert.showAndWait();
-        	if(result.isPresent() && result.get() == yesButton) {
-        		deleteRoute(selectedRoute);
-        	}
-        });
-        
-        
-        // Button Propierties
-        actionButton1.setPrefWidth(buttonWidth);
-        actionButton2.setPrefWidth(buttonWidth);
-        actionButton3.setPrefWidth(buttonWidth);
-        actionButton4.setPrefWidth(buttonWidth);
-        actionButton5.setPrefWidth(buttonWidth);
-        
-        infoButtonBox = new VBox(20); // Increased spacing between buttons
-        infoButtonBox.setAlignment(Pos.CENTER);
-        
-        // Arrange labels and buttons in a vertical layout
-        VBox labelsAndButtons = new VBox(10);
-        labelsAndButtons.setAlignment(Pos.CENTER);
-        labelsAndButtons.getChildren().addAll(infoLabel1, infoLabel2, infoLabel3, infoButtonBox);
 
         // Add the symbol pane and labels/buttons to the info pane
-        infoPane.getChildren().addAll(symbolPane, labelsAndButtons);
+        infoPane.getChildren().add(createObjectInfoPane());
         
         StackPane bottomPane = new StackPane();
         bottomPane.setPadding(new Insets(8.5));
@@ -209,8 +147,12 @@ public class MainScreen extends Application{
 
 
         Scene scene = new Scene(root, 800, 600);
+        primaryStage.setOnCloseRequest(event -> handleWindowClose(event));
         primaryStage.setScene(scene);
         primaryStage.show();
+        remakeStops();
+        remakeRoutes();
+        updateGraph();
     }
 
     private VBox createMenuPane() {
@@ -269,7 +211,7 @@ public class MainScreen extends Application{
                     
                     selectedStop = row.getItem();
                     
-                    selectNode(selectedStop.getVisual());
+                    selectNode(graphNodes.get(selectedStop));
                             
                     
                     if(lastNode != null && lastNode.equals(selectedNode)) {
@@ -304,6 +246,167 @@ public class MainScreen extends Application{
 
         menuPane.getChildren().addAll(addNodeButton, searchPathButton);
         return menuPane;
+    }
+    
+    private VBox createObjectInfoPane() {
+    	VBox objectInfoPane = new VBox();
+    	
+    	// Add a BorderPane for the symbol display
+        symbolPane = new BorderPane();
+        symbolPane.setPrefSize(100, 200);
+        symbolPane.setStyle("-fx-background-color: #e0e0e0; -fx-border-color: #666666;");
+        
+        // Info Symbol
+        nodeSymbol = new Circle(100, 100, 20);
+        edgeSymbol = new Line(70,50,170,135);
+        edgeSymbol.setStrokeWidth(10);
+        
+        symbolPane.setCenter(nodeSymbol);
+        
+        // Add labels for information
+        infoDesc1 = new Label("");
+        infoLabel1 = new Label("Ninguna Parada/Ruta Seleccionada");
+        infoDesc2 = new Label("");
+        infoLabel2 = new Label("");
+        infoDesc3 = new Label("");
+        infoLabel3 = new Label("");
+        
+        infoDesc1.setPadding(new Insets(15, 0, 0, 0));
+        infoDesc2.setPadding(new Insets(15, 0, 0, 0));
+        infoDesc3.setPadding(new Insets(15, 0, 0, 0));
+        infoLabel1.setPadding(new Insets(0, 0, 15, 0));
+        infoLabel2.setPadding(new Insets(0, 0, 15, 0));
+        infoLabel3.setPadding(new Insets(0, 0, 15, 0));
+
+        // Stop Info Manager Buttons
+        actionButton1 = new Button("Agregar Ruta");
+        actionButton1.setOnAction(e -> waitForUserAction(1));
+        actionButton2 = new Button("Editar Parada");
+        actionButton2.setOnAction(e -> new EditStopDialog(this).show());
+        actionButton3 = new Button("Eliminar Parada");
+        actionButton3.setOnAction(e -> {
+        	Alert alert = new Alert(AlertType.CONFIRMATION);
+        	alert.setTitle("Eliminar " + selectedStop.getLabel());
+        	alert.setHeaderText("¿Estás seguro de que quieres eliminar " + selectedStop.getLabel() + "?");
+        	alert.setContentText("Esta acción no puede deshacerse");
+        	ButtonType yesButton = new ButtonType("Sí");
+        	ButtonType noButton = new ButtonType("No");
+        	alert.getButtonTypes().setAll(yesButton, noButton);
+        	
+        	Optional<ButtonType> result = alert.showAndWait();
+        	if(result.isPresent() && result.get() == yesButton) {
+        		deleteStop(selectedStop);
+        	}
+        });
+        
+        // Route Info Manager Buttons
+        actionButton4 = new Button("Editar Ruta");
+        actionButton4.setOnAction(e -> new EditRouteDialog(this).show());
+        actionButton5 = new Button("Eliminar Ruta");
+        actionButton5.setOnAction(e -> {
+        	Alert alert = new Alert(AlertType.CONFIRMATION);
+        	alert.setTitle("Eliminar " + selectedRoute.getLabel());
+        	alert.setHeaderText("¿Estás seguro de que quieres eliminar " + selectedRoute.getLabel() + "?");
+        	alert.setContentText("Esta acción no puede deshacerse");
+        	ButtonType yesButton = new ButtonType("Sí");
+        	ButtonType noButton = new ButtonType("No");
+        	alert.getButtonTypes().setAll(yesButton, noButton);
+        	
+        	Optional<ButtonType> result = alert.showAndWait();
+        	if(result.isPresent() && result.get() == yesButton) {
+        		deleteRoute(selectedRoute);
+        	}
+        });
+        
+        // Button Propierties
+        actionButton1.setPrefWidth(buttonWidth);
+        actionButton2.setPrefWidth(buttonWidth);
+        actionButton3.setPrefWidth(buttonWidth);
+        actionButton4.setPrefWidth(buttonWidth);
+        actionButton5.setPrefWidth(buttonWidth);
+        
+        infoButtonBox = new VBox(20); // Increased spacing between buttons
+        infoButtonBox.setAlignment(Pos.CENTER);
+        
+        // Arrange labels and buttons in a vertical layout
+        VBox labelsAndButtons = new VBox(10);
+        labelsAndButtons.setAlignment(Pos.CENTER);
+        labelsAndButtons.getChildren().addAll(infoDesc1, infoLabel1, infoDesc2, infoLabel2, infoDesc3, infoLabel3, infoButtonBox);
+    	
+        objectInfoPane.getChildren().addAll(symbolPane, labelsAndButtons);
+        objectInfoPane.setAlignment(Pos.TOP_CENTER);
+        
+    	return objectInfoPane;
+    }
+    
+    private VBox createPathFinderPane(Stop start, Stop end) {
+    	VBox pathFinderPane = new VBox();
+    	pathFinderPane.setPadding(new Insets(100,10,10,10));
+    	pathFinderPane.setSpacing(10);
+    	
+    	Label titleLabel = new Label("Buscar camino");
+    	
+        algorythmsCombo = new ComboBox<>();
+        initialStopCombo = new ComboBox<>();
+        endStopCombo = new ComboBox<>();
+        
+        algorythmsCombo.setPrefWidth(comboWidth);
+        initialStopCombo.setPrefWidth(comboWidth);
+        endStopCombo.setPrefWidth(comboWidth);
+        
+    	Label distanceLabel = new Label("Distancia total recorrida:");
+    	distanceDetail = new Label("");
+        Label timeLabel = new Label("Tiempo total de viaje:");
+        timeDetail = new Label("");
+        
+        terminalPane = createTerminal();
+        
+        trailblazeButton = new Button("Trazar camino");
+        trailblazeButton.setPrefWidth(buttonWidth);
+        
+        algorythmsCombo.getItems().addAll(dijkstra, bellmanford, warshall, kruskal);
+
+        initialStopCombo.getItems().addAll(PTMS.getInstance().getGraph().getStops());
+        endStopCombo.getItems().addAll(PTMS.getInstance().getGraph().getStops());
+        
+        //ComboBox place-holders
+        algorythmsCombo.setValue(dijkstra);
+        initialStopCombo.setValue(start);
+        endStopCombo.setValue(end);
+        
+        //Acción del botón
+        trailblazeButton.setOnAction(event -> {
+            searchPath(initialStopCombo.getValue(), endStopCombo.getValue(), algorythmsCombo.getValue());
+            waitForUserAction(4);
+        });
+        
+        pathFinderPane.getChildren().addAll(titleLabel, algorythmsCombo, initialStopCombo, endStopCombo, distanceLabel, distanceDetail, timeLabel, timeDetail, terminalPane, trailblazeButton);
+        pathFinderPane.setAlignment(Pos.TOP_CENTER);
+        
+    	return pathFinderPane;
+    }
+    
+    private Pane createTerminal() {
+        // Crear un VBox para contener las líneas de texto
+        textContainer = new VBox(5); // Espaciado de 5 entre líneas
+            Text text = new Text("");
+            textContainer.getChildren().add(text);
+
+        // Envolver el VBox en un ScrollPane
+        ScrollPane scrollPane = new ScrollPane(textContainer);
+        scrollPane.setFitToWidth(true); // Asegurar que el ancho coincida con el contenedor
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
+        // Configurar el tamaño del ScrollPane
+        scrollPane.setPrefSize(240, 300);
+
+        // Crear el Pane principal y agregar el ScrollPane
+        Pane terminalPane = new Pane(scrollPane);
+        scrollPane.setLayoutX(0);
+        scrollPane.setLayoutY(0);
+
+        return terminalPane;
     }
     
     public void waitForUserAction(int arg) {
@@ -372,6 +475,30 @@ public class MainScreen extends Application{
             });
     	}
     	
+    	if(arg == 4) {
+    		instructionLabel.setText("Haz click en cualquier lugar o presiona ESC para continuar");
+    		root.setTop(instructionBox);
+    		
+    		table.setDisable(true);
+        	addNodeButton.setDisable(true);
+        	searchPathButton.setDisable(true);
+    		algorythmsCombo.setDisable(true);
+    		initialStopCombo.setDisable(true);
+    		endStopCombo.setDisable(true);
+    		trailblazeButton.setDisable(true);
+    		
+    		graphPane.setOnMouseClicked(this::handleSearchedPath);
+    		
+    		graphPane.getScene().setOnKeyPressed(event -> {
+                if (event.getCode() == KeyCode.ESCAPE) {
+                	resetTrailblaze();
+                	selectNode(null);
+                	endUserAction();
+                }
+            });
+    		
+    	}
+    	
         
     }
     
@@ -405,10 +532,10 @@ public class MainScreen extends Application{
         
         Circle lastNode = selectedNode;
         
-        for (Circle node : PTMS.getInstance().getGraph().getStopVisuals()) {
+        for (Circle node : graphNodes.values()) {
             if (node.contains(clickX, clickY)) {
                 selectNode(node);  // Select the clicked node
-                selectedStop = PTMS.getInstance().getGraph().getStopbyVisual(node);
+                selectedStop = getVisualStop(node);
             }
         }
         if(lastNode != null && lastNode.equals(selectedNode)) {
@@ -429,10 +556,10 @@ public class MainScreen extends Application{
         Circle lastNode = selectedNode;
         Line lastRoute = selectedEdge;
         
-        for (Circle node : PTMS.getInstance().getGraph().getStopVisuals()) {
+        for (Circle node : graphNodes.values()) {
             if (node.contains(clickX, clickY)) {
                 selectNode(node);  // Select the clicked node
-                selectedStop = PTMS.getInstance().getGraph().getStopbyVisual(node);
+                selectedStop = getVisualStop(node);
             }
         }
         
@@ -441,11 +568,11 @@ public class MainScreen extends Application{
         	selectedStop = null;
         }
         
-        for(Line edge : PTMS.getInstance().getGraph().getRouteVisuals()) {
+        for(Line edge : graphEdges.values()) {
         	if(edge.contains(clickX, clickY)) {
         		if(selectedStop == null) {
         			selectEdge(edge);
-        			selectedRoute = PTMS.getInstance().getGraph().getRoutebyVisual(edge);
+        			selectedRoute = getVisualRoute(edge);
         		}
         	}
         }
@@ -467,10 +594,10 @@ public class MainScreen extends Application{
         
         Circle lastNode = selectedNode;
         
-        for (Circle node : PTMS.getInstance().getGraph().getStopVisuals()) {
+        for (Circle node : graphNodes.values()) {
             if (node.contains(clickX, clickY)) {
                 selectNode(node);  // Select the clicked node
-                selectedStop = PTMS.getInstance().getGraph().getStopbyVisual(node);
+                selectedStop = getVisualStop(node);
             }
         }
         if(lastNode != null && lastNode.equals(selectedNode)) {
@@ -478,30 +605,126 @@ public class MainScreen extends Application{
         	selectedStop = null;
         	endUserAction();
         }else {
-        	searchPath(lastStop, selectedStop);
+            infoPane.getChildren().clear();
+            infoPane.getChildren().add(createPathFinderPane(lastStop, selectedStop));
             endUserAction();
         }
     	
     };
     
-    private void searchPath(Stop from, Stop to) {
+    private void handleSearchedPath(MouseEvent event) {
+    	resetTrailblaze();
+    	selectNode(null);
+    	endUserAction();
+    };
+    
+    private void handleWindowClose(WindowEvent event) {
+    	
+    	Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Salir");
+        alert.setHeaderText("¿Desea guardar antes de salir?");
+        alert.setContentText("Los cambios sin guardar se perderán");
+
+        // Show the alert and wait for user response
+        ButtonType yesButton = new ButtonType("Sí");
+    	ButtonType noButton = new ButtonType("No");
+    	
+    	alert.getButtonTypes().setAll(yesButton, noButton);
+    	
+    	Optional<ButtonType> result = alert.showAndWait();
+    	if(result.isPresent() && result.get() == yesButton) {
+    		PTMS.getInstance().savePTMS();
+    	}
+    	if(result.isPresent() && result.get() == noButton) {
+    		
+    	}
+    };
+    
+    private void searchPath(Stop from, Stop to, String algorythm) {
     	
     	PathFinder pathfinder = new PathFinder(PTMS.getInstance().getGraph());
     	List<Stop> path;
     	
-    	path = pathfinder.dijkstra(from, to);
-    	pathfinder.printPath(path);
+    	switch(algorythm) {
+    	case dijkstra:
+    		path = pathfinder.dijkstra(from, to);
+    		break;
+    	case bellmanford:
+    		path = pathfinder.bellmanFord(from, to);
+    		break;
+    	case warshall:
+    		path = pathfinder.floydWarshall(from, to);
+    		break;
+    	case kruskal:
+    		path = pathfinder.kruskalMST(from, to);
+    		break;
+    	default:
+    		path = pathfinder.dijkstra(from, to);
+    		break;
+    	}
     	
-    	/*path = pathfinder.bellmanFord(from, to);
-    	pathfinder.printPath(path);
-    	path = pathfinder.floydWarshall(from, to);
-    	pathfinder.printPath(path);
-    	path = pathfinder.kruskalMST(from, to);
-    	pathfinder.printPath(path);*/
+        textContainer.getChildren().clear();
+		pathfinder.printPath(path);
+        
+    	if(path.isEmpty()) {
+    		Text text = new Text("No se encontró un camino");
+    		textContainer.getChildren().add(text);
+    	}else {
+        	int[] pathDetails = pathfinder.getPathDetails(path);
+        	distanceDetail.setText(""+pathDetails[0]+" km");
+            timeDetail.setText(""+pathDetails[1]+" min");
+            
+            for (String message : pathfinder.getRouteDetails(path)) {
+                Text text = new Text(message);
+                textContainer.getChildren().add(text);
+            }
+
+        	trailblaze(path);
+    	}
+    }
+    
+    private void trailblaze(List<Stop> path) {
     	
-    	selectNode(null);
+    	for(Stop s : path) {
+    		if(graphNodes.get(s) != null) {
+    			graphNodes.get(s).setStyle("-fx-fill: #f9b040;");
+    			if(s.equals(path.getFirst())) graphNodes.get(s).setStyle("-fx-fill: #fec88e;");
+    			if(s.equals(path.getLast())) graphNodes.get(s).setStyle("-fx-fill: #fc6355;");
+    		}
+    	}
+    	
+    	for(int i = 0; i < path.size() - 1; i++) {
+    		Stop current = path.get(i);
+    		Stop next = path.get(i+1);
+    		for(Line l : graphEdges.values()) {
+    			if(graphEdges.get(PTMS.getInstance().getGraph().getRoute(current, next)).equals(l)){
+    				l.setStyle("-fx-stroke: #000000;");
+    			}
+    		}
+    	}
+    	
     	updateGraph();
-    	updateInfo();
+    }
+    
+    private void resetTrailblaze() {
+    	
+    	table.setDisable(false);
+    	addNodeButton.setDisable(false);
+    	searchPathButton.setDisable(false);
+    	algorythmsCombo.setDisable(false);
+		initialStopCombo.setDisable(false);
+		endStopCombo.setDisable(false);
+		trailblazeButton.setDisable(false);
+    	
+    	for(Circle node : graphNodes.values()) {
+    		node.setStyle("-fx-fill: #3498db;");
+    	}
+    	
+    	for(Line l : graphEdges.values()) {
+    		l.setStyle("-fx-stroke: #2c3e50; -fx-stroke-width: 6;");
+    	}
+    	
+    	updateGraph();
     }
     
     private void selectNode(Circle node) {
@@ -527,7 +750,10 @@ public class MainScreen extends Application{
     }
     
     private void updateInfo() {
+    	infoPane.getChildren().clear();
+    	infoPane.getChildren().add(createObjectInfoPane());
 		symbolPane.getChildren().clear();
+		
     	// This Method updates the infoPane with the details of the selected stop
     	if((selectedStop != null && selectedNode != null) || (selectedRoute != null && selectedEdge != null)) {
     		
@@ -537,9 +763,12 @@ public class MainScreen extends Application{
     			nodeSymbol.setStyle(selectedNode.getStyle());
         		infoButtonBox.getChildren().clear();
         		infoButtonBox.getChildren().addAll(actionButton1, actionButton2, actionButton3);
-        		infoLabel1.setText("ID\n"+selectedStop.getId());
-                infoLabel2.setText("Parada\n"+selectedStop.getLabel());
-                infoLabel3.setText("Coordenadas\n\n"+"x ="+selectedStop.getX()+"\n"+"y ="+selectedStop.getY());
+        		infoDesc1.setText("ID");
+        		infoLabel1.setText(""+selectedStop.getId());
+        		infoDesc2.setText("Parada");
+                infoLabel2.setText(""+selectedStop.getLabel());
+                infoDesc3.setText("Coordenadas");
+                infoLabel3.setText("( "+selectedStop.getX()+" , "+selectedStop.getY()+" )");
     		}
     		
     		if(selectedRoute != null && selectedEdge != null) {
@@ -550,9 +779,12 @@ public class MainScreen extends Application{
     			symbolPane.getChildren().addAll(edgeSymbol, arrowhead);
     			infoButtonBox.getChildren().clear();
     			infoButtonBox.getChildren().addAll(actionButton4, actionButton5);
-        		infoLabel1.setText("ID\n"+selectedRoute.getId());
-                infoLabel2.setText("Ruta\n"+selectedRoute.getLabel());
-                infoLabel3.setText("Distancia\n"+selectedRoute.getDistance());
+    			infoDesc1.setText("ID");
+        		infoLabel1.setText(""+selectedRoute.getId());
+                infoDesc2.setText("Ruta");
+        		infoLabel2.setText(""+selectedRoute.getLabel());
+                infoDesc3.setText("Distancia");
+        		infoLabel3.setText(""+selectedRoute.getDistance());
     		}
     		
             
@@ -560,45 +792,46 @@ public class MainScreen extends Application{
     		symbolPane.setCenter(nodeSymbol);
     		nodeSymbol.setStyle("-fx-fill: #a3a8ab;");
     		infoButtonBox.getChildren().clear();
-    		infoLabel1.setText("Ninguna Parada/Ruta Seleccionada");
-            infoLabel2.setText("");
-            infoLabel3.setText("");
+    		
+    		infoDesc1 = new Label("");
+            infoLabel1 = new Label("Ninguna Parada/Ruta Seleccionada");
+            infoDesc2 = new Label("");
+            infoLabel2 = new Label("");
+            infoDesc3 = new Label("");
+            infoLabel3 = new Label("");
     	}
     }
     
     public void addStop(Stop stop) {
     	Circle node = new Circle(stop.getX(), stop.getY(), circleRadius);
     	node.setStyle("-fx-fill: #3498db;");
-    	stop.setVisual(node);
        	PTMS.getInstance().getGraph().addStop(stop);
-    	graphNodes.add(node);
+    	graphNodes.put(stop, node);
     	selectNode(null);
-    	updateGraph();
     	updateInfo();
+    	updateGraph();
     }
     
     public void addRoute(Route route) {
     	Line visual = new Line(route.getSrc().getX(), route.getSrc().getY(), route.getDest().getX(), route.getDest().getY());
         visual.setStyle("-fx-stroke: #2c3e50; -fx-stroke-width: 6;");
-        route.setVisual(visual);
         PTMS.getInstance().getGraph().addRoute(route);
-        graphEdges.add(visual);
+        graphEdges.put(route, visual);
         selectNode(null);
-        updateGraph();
         updateInfo();
+        updateGraph();
     }
     
     public void editStop(Stop stop) {
-    	graphNodes.remove(stop.getVisual());
+    	graphNodes.remove(stop);
     	Circle node = new Circle(stop.getX(), stop.getY(), circleRadius);
     	node.setStyle("-fx-fill: #3498db;");
-    	stop.setVisual(node);
     	PTMS.getInstance().getGraph().modifyStop(stop);
-    	graphNodes.add(node);
+    	graphNodes.put(stop, node);
     	selectNode(null);
     	remakeRoutes();
-    	updateGraph();
     	updateInfo();
+    	updateGraph();
     }
     
     public void editRoute(Route route) {
@@ -607,36 +840,40 @@ public class MainScreen extends Application{
     }
     
     public void deleteStop(Stop stop) {
-    	 graphNodes.remove(stop.getVisual());
+    	 graphNodes.remove(stop);
     	 PTMS.getInstance().getGraph().deleteStop(stop);
     	 selectNode(null);
     	 remakeRoutes();
+    	 updateInfo();
     	 updateGraph();
     	 updateEdges();
-    	 updateInfo();
     }
     public void deleteRoute(Route route) {
-    	graphEdges.remove(route.getVisual());
+    	graphEdges.remove(route);
     	PTMS.getInstance().getGraph().deleteRoute(route.getSrc(), route.getDest());
     	selectEdge(null);
     	updateEdges();
     	updateInfo();
     }
     
+    private void remakeStops() {
+    	graphNodes.clear();
+    	Circle currentStop;
+    	for(LinkedList<Stop> currentList : PTMS.getInstance().getGraph().getAdjList()) {
+    		Stop stop = currentList.get(0);
+    		currentStop = new Circle(stop.getX(), stop.getY(), circleRadius);
+    		currentStop.setStyle("-fx-fill: #3498db;");
+    		graphNodes.put(stop, currentStop);
+    	}
+    }
+    
     private void remakeRoutes() {
     	graphEdges.clear();
     	Line currentRoute;
-    	for(LinkedList<Stop> currentList : PTMS.getInstance().getGraph().getAdjList()) {
-    		for(Stop stop : currentList) {
-    			if(stop != currentList.get(0)) {
-    				Stop start = currentList.get(0);
-    				Stop end = stop;
-    				currentRoute = PTMS.getInstance().getGraph().getRoute(start, end).getVisual();
-    				currentRoute.setStartX(start.getX()); currentRoute.setStartY(start.getY());
-    				currentRoute.setEndX(end.getX()); currentRoute.setEndY(end.getY());
-        	        graphEdges.add(currentRoute);
-    			}
-    		}
+    	for(Route r : PTMS.getInstance().getGraph().getRoutes()) {
+    		currentRoute = new Line(r.getSrc().getX(), r.getSrc().getY(), r.getDest().getX(), r.getDest().getY());
+    		currentRoute.setStyle("-fx-stroke: #2c3e50; -fx-stroke-width: 6;");
+      	    graphEdges.put(r, currentRoute);
     	}
     }
     
@@ -647,17 +884,25 @@ public class MainScreen extends Application{
     	graphPane.getChildren().clear();
     	
     	// Adding nodes to the graphPane
-    	graphPane.getChildren().addAll(graphNodes);
+    	for(Entry<Stop, Circle> entry : graphNodes.entrySet()) {
+        	graphPane.getChildren().add(entry.getValue());
+    	}
     	// Adding edges to the graphPane
-    	for(Line l : graphEdges) {
+    	for(Line l : graphEdges.values()) {
    			Polygon arrowhead = createArrowhead(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY());
    			if(selectedEdge != null && selectedEdge.equals(l)) {
    				l.setStyle("-fx-stroke: #e66161; -fx-stroke-width: 6;");
    				arrowhead.setStyle("-fx-stroke: #e66161; -fx-stroke-width: 6;");
-   			}else {
+   			}else
+   			if(l.getStyle().contains("-fx-stroke: #000000;")) {
+   	   			l.setStyle("-fx-stroke: #f9b040; -fx-stroke-width: 6;");
+   	   			arrowhead.setStyle("-fx-stroke: #f9b040; -fx-stroke-width: 6;");   			
+  			}else
+   			{
    				l.setStyle("-fx-stroke: #2c3e50; -fx-stroke-width: 6;");
    				arrowhead.setStyle("-fx-stroke: #2c3e50; -fx-stroke-width: 6;");
    			}
+   			
     	    // Add the edge and the arrowhead to the root pane
     		graphPane.getChildren().addAll(l, arrowhead);
    		}
@@ -666,8 +911,22 @@ public class MainScreen extends Application{
     private void updateEdges() {
     	graphEdges.clear();
     	for(Entry<String, Route> entry : PTMS.getInstance().getGraph().getRoutesMap().entrySet()) {
-    		graphEdges.add(entry.getValue().getVisual());
+    		graphEdges.put(entry.getValue(), new Line(entry.getValue().getSrc().getX(),entry.getValue().getSrc().getY(),entry.getValue().getDest().getX(),entry.getValue().getDest().getY()));
     	}
+    }
+    
+    private Stop getVisualStop(Circle visual) {
+    	for(Stop s : PTMS.getInstance().getGraph().getStops()) {
+    		if(graphNodes.get(s).equals(visual)) return s;
+    	}
+    	return null;
+    }
+    
+    private Route getVisualRoute(Line visual) {
+    	for(Route r : PTMS.getInstance().getGraph().getRoutes()) {
+    		if(graphEdges.get(r).equals(visual)) return r;
+    	}
+    	return null;
     }
     
     private Polygon createArrowhead(double startX, double startY, double endX, double endY) {
