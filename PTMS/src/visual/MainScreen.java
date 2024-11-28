@@ -3,6 +3,7 @@ package visual;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Map.Entry;
 
@@ -20,6 +21,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
@@ -36,6 +38,7 @@ import javafx.scene.shape.Polygon;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import logic.PTMS;
+import logic.PathFinder;
 import logic.Route;
 import logic.Stop;
 
@@ -58,6 +61,8 @@ public class MainScreen extends Application{
     private Button actionButton1;
     private Button actionButton2;
     private Button actionButton3;
+    private Button actionButton4;
+    private Button actionButton5;
     
     ArrayList<Circle> graphNodes;
     ArrayList<Line> graphEdges;
@@ -70,8 +75,11 @@ public class MainScreen extends Application{
     Label infoLabel2;
     Label infoLabel3;
     
+    VBox infoButtonBox;
+    
     //Definitions
     static final double circleRadius = 20;
+    static final double buttonWidth = 300;
     
     @Override
     public void start(Stage primaryStage) {
@@ -122,7 +130,7 @@ public class MainScreen extends Application{
         infoLabel2.setPadding(new Insets(10, 0, 5, 0));
         infoLabel3.setPadding(new Insets(10, 0, 100, 0));
 
-        // Add buttons below the labels
+        // Stop Info Manager Buttons
         actionButton1 = new Button("Agregar Ruta");
         actionButton1.setOnAction(e -> waitForUserAction(1));
         actionButton2 = new Button("Editar Parada");
@@ -143,23 +151,40 @@ public class MainScreen extends Application{
         	}
         });
         
-        double buttonWidth = 300; // Desired width for buttons
+        // Route Info Manager Buttons
+        actionButton4 = new Button("Editar Ruta");
+        actionButton4.setOnAction(e -> new EditRouteDialog(this).show());
+        actionButton5 = new Button("Eliminar Ruta");
+        actionButton5.setOnAction(e -> {
+        	Alert alert = new Alert(AlertType.CONFIRMATION);
+        	alert.setTitle("Eliminar " + selectedRoute.getLabel());
+        	alert.setHeaderText("¿Estás seguro de que quieres eliminar " + selectedRoute.getLabel() + "?");
+        	alert.setContentText("Esta acción no puede deshacerse");
+        	ButtonType yesButton = new ButtonType("Sí");
+        	ButtonType noButton = new ButtonType("No");
+        	alert.getButtonTypes().setAll(yesButton, noButton);
+        	
+        	Optional<ButtonType> result = alert.showAndWait();
+        	if(result.isPresent() && result.get() == yesButton) {
+        		deleteRoute(selectedRoute);
+        	}
+        });
+        
+        
+        // Button Propierties
         actionButton1.setPrefWidth(buttonWidth);
         actionButton2.setPrefWidth(buttonWidth);
         actionButton3.setPrefWidth(buttonWidth);
+        actionButton4.setPrefWidth(buttonWidth);
+        actionButton5.setPrefWidth(buttonWidth);
         
-        actionButton1.setVisible(false);
-        actionButton2.setVisible(false);
-        actionButton3.setVisible(false);
-        
-        VBox buttonBox = new VBox(20); // Increased spacing between buttons
-        buttonBox.setAlignment(Pos.CENTER);
-        buttonBox.getChildren().addAll(actionButton1, actionButton2, actionButton3);
+        infoButtonBox = new VBox(20); // Increased spacing between buttons
+        infoButtonBox.setAlignment(Pos.CENTER);
         
         // Arrange labels and buttons in a vertical layout
         VBox labelsAndButtons = new VBox(10);
         labelsAndButtons.setAlignment(Pos.CENTER);
-        labelsAndButtons.getChildren().addAll(infoLabel1, infoLabel2, infoLabel3, buttonBox);
+        labelsAndButtons.getChildren().addAll(infoLabel1, infoLabel2, infoLabel3, infoButtonBox);
 
         // Add the symbol pane and labels/buttons to the info pane
         infoPane.getChildren().addAll(symbolPane, labelsAndButtons);
@@ -235,6 +260,33 @@ public class MainScreen extends Application{
         tableData = FXCollections.observableArrayList(PTMS.getInstance().getGraph().getStops());
         table.setItems(tableData);
         
+        table.setRowFactory(tv -> {
+            TableRow<Stop> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (!row.isEmpty() && event.getClickCount() == 1) { // Single click
+                    
+                	Circle lastNode = selectedNode;
+                    
+                    selectedStop = row.getItem();
+                    
+                    selectNode(selectedStop.getVisual());
+                            
+                    
+                    if(lastNode != null && lastNode.equals(selectedNode)) {
+                    	selectNode(null);
+                    	selectedStop = null;
+                    }
+                    
+                    updateInfo();
+                    
+                } else if (!row.isEmpty() && event.getClickCount() == 2) { // Double click
+                    selectedStop = row.getItem();
+                    new EditStopDialog(this).show();
+                }
+            });
+            return row;
+        });
+        
         menuPane.getChildren().add(table);
         
         double buttonHeight = 50;
@@ -248,7 +300,7 @@ public class MainScreen extends Application{
         searchPathButton = new Button("Buscar Camino");
         searchPathButton.setPrefHeight(buttonHeight);
         searchPathButton.setPrefWidth(buttonWidth);
-        //searchPathButton.setOnAction(e -> );
+        searchPathButton.setOnAction(e -> waitForUserAction(3));
 
         menuPane.getChildren().addAll(addNodeButton, searchPathButton);
         return menuPane;
@@ -295,6 +347,22 @@ public class MainScreen extends Application{
             
             // Mouse click listener
             graphPane.setOnMouseClicked(this::handleMoveStop);
+
+            // Key press listener on the scene to detect 'ESC' key press
+            graphPane.getScene().setOnKeyPressed(event -> {
+                if (event.getCode() == KeyCode.ESCAPE) {
+                	endUserAction();
+                }
+            });
+    	}
+    	
+    	if(arg == 3) {
+    		graphPane.setCursor(Cursor.CROSSHAIR);
+    		instructionLabel.setText("Haz click en la parada de destino o presiona ESC para cancelar");
+            root.setTop(instructionBox);
+            
+            // Mouse click listener
+            graphPane.setOnMouseClicked(this::handlePathFinder);
 
             // Key press listener on the scene to detect 'ESC' key press
             graphPane.getScene().setOnKeyPressed(event -> {
@@ -391,6 +459,51 @@ public class MainScreen extends Application{
 
     };
     
+    private void handlePathFinder(MouseEvent event) {
+    	
+    	double clickX = event.getX();
+        double clickY = event.getY();
+        Stop lastStop = selectedStop;
+        
+        Circle lastNode = selectedNode;
+        
+        for (Circle node : PTMS.getInstance().getGraph().getStopVisuals()) {
+            if (node.contains(clickX, clickY)) {
+                selectNode(node);  // Select the clicked node
+                selectedStop = PTMS.getInstance().getGraph().getStopbyVisual(node);
+            }
+        }
+        if(lastNode != null && lastNode.equals(selectedNode)) {
+        	selectNode(null);
+        	selectedStop = null;
+        	endUserAction();
+        }else {
+        	searchPath(lastStop, selectedStop);
+            endUserAction();
+        }
+    	
+    };
+    
+    private void searchPath(Stop from, Stop to) {
+    	
+    	PathFinder pathfinder = new PathFinder(PTMS.getInstance().getGraph());
+    	List<Stop> path;
+    	
+    	path = pathfinder.dijkstra(from, to);
+    	pathfinder.printPath(path);
+    	
+    	/*path = pathfinder.bellmanFord(from, to);
+    	pathfinder.printPath(path);
+    	path = pathfinder.floydWarshall(from, to);
+    	pathfinder.printPath(path);
+    	path = pathfinder.kruskalMST(from, to);
+    	pathfinder.printPath(path);*/
+    	
+    	selectNode(null);
+    	updateGraph();
+    	updateInfo();
+    }
+    
     private void selectNode(Circle node) {
     	if(node != null) {
     		// Deselect the previously selected node (if any)
@@ -422,9 +535,8 @@ public class MainScreen extends Application{
   
     			symbolPane.setCenter(nodeSymbol);
     			nodeSymbol.setStyle(selectedNode.getStyle());
-        		actionButton1.setVisible(true);
-                actionButton2.setVisible(true);
-                actionButton3.setVisible(true);
+        		infoButtonBox.getChildren().clear();
+        		infoButtonBox.getChildren().addAll(actionButton1, actionButton2, actionButton3);
         		infoLabel1.setText("ID\n"+selectedStop.getId());
                 infoLabel2.setText("Parada\n"+selectedStop.getLabel());
                 infoLabel3.setText("Coordenadas\n\n"+"x ="+selectedStop.getX()+"\n"+"y ="+selectedStop.getY());
@@ -436,9 +548,8 @@ public class MainScreen extends Application{
     			edgeSymbol.setStyle("-fx-stroke: #e66161; -fx-stroke-width: 8;");
     			arrowhead.setStyle("-fx-stroke: #e66161; -fx-stroke-width: 15;");
     			symbolPane.getChildren().addAll(edgeSymbol, arrowhead);
-        		actionButton1.setVisible(true);
-                actionButton2.setVisible(true);
-                actionButton3.setVisible(true);
+    			infoButtonBox.getChildren().clear();
+    			infoButtonBox.getChildren().addAll(actionButton4, actionButton5);
         		infoLabel1.setText("ID\n"+selectedRoute.getId());
                 infoLabel2.setText("Ruta\n"+selectedRoute.getLabel());
                 infoLabel3.setText("Distancia\n"+selectedRoute.getDistance());
@@ -448,9 +559,7 @@ public class MainScreen extends Application{
     	}else {
     		symbolPane.setCenter(nodeSymbol);
     		nodeSymbol.setStyle("-fx-fill: #a3a8ab;");
-    		actionButton1.setVisible(false);
-            actionButton2.setVisible(false);
-            actionButton3.setVisible(false);
+    		infoButtonBox.getChildren().clear();
     		infoLabel1.setText("Ninguna Parada/Ruta Seleccionada");
             infoLabel2.setText("");
             infoLabel3.setText("");
@@ -465,6 +574,7 @@ public class MainScreen extends Application{
     	graphNodes.add(node);
     	selectNode(null);
     	updateGraph();
+    	updateInfo();
     }
     
     public void addRoute(Route route) {
@@ -475,6 +585,7 @@ public class MainScreen extends Application{
         graphEdges.add(visual);
         selectNode(null);
         updateGraph();
+        updateInfo();
     }
     
     public void editStop(Stop stop) {
@@ -487,17 +598,29 @@ public class MainScreen extends Application{
     	selectNode(null);
     	remakeRoutes();
     	updateGraph();
+    	updateInfo();
+    }
+    
+    public void editRoute(Route route) {
+    	PTMS.getInstance().getGraph().modifyRoute(route);
+    	updateInfo();
     }
     
     public void deleteStop(Stop stop) {
     	 graphNodes.remove(stop.getVisual());
     	 PTMS.getInstance().getGraph().deleteStop(stop);
     	 selectNode(null);
-    	 updateEdges();
+    	 remakeRoutes();
     	 updateGraph();
+    	 updateEdges();
+    	 updateInfo();
     }
-    public void deleteRoute() {
-    	
+    public void deleteRoute(Route route) {
+    	graphEdges.remove(route.getVisual());
+    	PTMS.getInstance().getGraph().deleteRoute(route.getSrc(), route.getDest());
+    	selectEdge(null);
+    	updateEdges();
+    	updateInfo();
     }
     
     private void remakeRoutes() {
@@ -542,7 +665,7 @@ public class MainScreen extends Application{
 
     private void updateEdges() {
     	graphEdges.clear();
-    	for(Entry<String, Route> entry : PTMS.getInstance().getGraph().getRoutes().entrySet()) {
+    	for(Entry<String, Route> entry : PTMS.getInstance().getGraph().getRoutesMap().entrySet()) {
     		graphEdges.add(entry.getValue().getVisual());
     	}
     }

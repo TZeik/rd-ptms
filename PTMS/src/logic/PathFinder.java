@@ -4,344 +4,308 @@ import java.util.*;
 
 public class PathFinder {
     private final Graph graph;
-    private final int V;
     
-    public PathFinder(Graph graph, int vertices) {
+    public PathFinder(Graph graph) {
         this.graph = graph;
-        this.V = vertices;
     }
 
-    class Distance implements Comparable<Distance> {
-        int vertex;
-        int distance;
-
-        public Distance(int vertex, int distance) {
-            this.vertex = vertex;
-            this.distance = distance;
-        }
-
-        @Override
-        public int compareTo(Distance other) {
-            return Integer.compare(this.distance, other.distance);
-        }
-    }
-
-    class Edge implements Comparable<Edge> {
-        int src, dest, weight;
-
-        public Edge(int src, int dest, int weight) {
-            this.src = src;
-            this.dest = dest;
-            this.weight = weight;
-        }
-
-        @Override
-        public int compareTo(Edge other) {
-            return Integer.compare(this.weight, other.weight);
-        }
-    }
-
-    class DisjointSet {
-        int[] parent, rank;
-
-        public DisjointSet(int n) {
-            parent = new int[n];
-            rank = new int[n];
-            for (int i = 0; i < n; i++) {
-                parent[i] = i;
-            }
-        }
-
-        int find(int x) {
-            if (parent[x] != x) {
-                parent[x] = find(parent[x]);
-            }
-            return parent[x];
-        }
-
-        void union(int x, int y) {
-            int xRoot = find(x);
-            int yRoot = find(y);
-
-            if (rank[xRoot] < rank[yRoot]) {
-                parent[xRoot] = yRoot;
-            } else if (rank[xRoot] > rank[yRoot]) {
-                parent[yRoot] = xRoot;
-            } else {
-                parent[yRoot] = xRoot;
-                rank[xRoot]++;
-            }
-        }
-    }
-
-    public int[] dijkstra(int source, boolean useDistance) {
+    public List<Stop> dijkstra(Stop start, Stop end) {
         updateAllEvents();
         
-        int[] distances = new int[V];
-        int[] parent = new int[V];
-        boolean[] visited = new boolean[V];
-
-        Arrays.fill(distances, Integer.MAX_VALUE);
-        Arrays.fill(parent, -1);
-
-        PriorityQueue<Distance> pq = new PriorityQueue<>();
-        distances[source] = 0;
-        pq.add(new Distance(source, 0));
-
+        // Distancia mínima de cada nodo desde el inicio
+        Map<Stop, Integer> distances = new HashMap<>();
+        // Nodo previo para reconstruir el camino
+        Map<Stop, Stop> previous = new HashMap<>();
+        
+        // Min-Heap para procesar los nodos en orden de distancia
+        PriorityQueue<Stop> pq = new PriorityQueue<>(Comparator.comparingInt(distances::get));
+        
+        // Inicializar distancias
+        for (LinkedList<Stop> list : graph.getAdjList()) {
+            for (Stop stop : list) {
+                distances.put(stop, Integer.MAX_VALUE); // Infinito
+                previous.put(stop, null);
+            }
+        }
+        distances.put(start, 0);
+        pq.add(start);
+        
+        // Procesar la cola de prioridad
         while (!pq.isEmpty()) {
-            int u = pq.poll().vertex;
-            if (visited[u]) continue;
-            visited[u] = true;
+            Stop current = pq.poll();
 
-            LinkedList<Stop> neighbors = graph.getAdjList().get(u);
-            for (Stop stop : neighbors) {
-                int v = stop.getId();
-                Route route = graph.getRoute(u, v);
-                if (route == null) continue;
+            // Si llegamos al destino, terminamos
+            if (current.equals(end)) {
+                break;
+            }
 
-                int weight = useDistance ? route.getDistance() : route.getAdjustedTravelTime();
-
-                if (!visited[v] && distances[u] != Integer.MAX_VALUE && 
-                    distances[u] + weight < distances[v]) {
-                    distances[v] = distances[u] + weight;
-                    parent[v] = u;
-                    pq.add(new Distance(v, distances[v]));
+            // Procesar vecinos del nodo actual
+            for (Stop neighbor : graph.getNeighbors(current)) {
+                Route route = graph.getRoute(current, neighbor);
+                if (route != null) {
+                    int newDist = distances.get(current) + route.getDistance();
+                    if (newDist < distances.get(neighbor)) {
+                        distances.put(neighbor, newDist);
+                        previous.put(neighbor, current);
+                        pq.add(neighbor);
+                    }
                 }
             }
         }
-        return parent;
+        
+        // Reconstruir el camino desde el mapa de predecesores
+        List<Stop> path = new ArrayList<>();
+        for (Stop at = end; at != null; at = previous.get(at)) {
+            path.add(at);
+        }
+        Collections.reverse(path);
+        
+        // Si el inicio no está conectado con el final
+        if (path.size() == 1 && !path.get(0).equals(start)) {
+            return Collections.emptyList(); // Camino no encontrado
+        }
+        
+        return path;
+    }
+    
+    public List<Stop> bellmanFord(Stop start, Stop end) {
+        // Distancia mínima de cada nodo desde el inicio
+        Map<Stop, Integer> distances = new HashMap<>();
+        // Nodo previo para reconstruir el camino
+        Map<Stop, Stop> previous = new HashMap<>();
+
+        // Inicializar distancias
+        for (LinkedList<Stop> list : graph.getAdjList()) {
+            for (Stop stop : list) {
+                distances.put(stop, Integer.MAX_VALUE); // Infinito
+                previous.put(stop, null);
+            }
+        }
+        distances.put(start, 0);
+
+        // Obtener todas las aristas del grafo
+        List<Route> allRoutes = new ArrayList<>();
+        for (LinkedList<Stop> stops : graph.getAdjList()) {
+            Stop from = stops.get(0);
+            for (int i = 1; i < stops.size(); i++) {
+                Stop to = stops.get(i);
+                Route route = graph.getRoute(from, to);
+                if (route != null) {
+                    allRoutes.add(route);
+                }
+            }
+        }
+
+        // Relajación de las aristas |V| - 1 veces
+        for (int i = 1; i < distances.size(); i++) {
+            for (Route route : allRoutes) {
+                Stop from = route.getSrc(); // Obtener nodo origen
+                Stop to = route.getDest();   // Obtener nodo destino
+
+                if (distances.get(from) != Integer.MAX_VALUE && distances.get(from) + route.getDistance() < distances.get(to)) {
+                    distances.put(to, distances.get(from) + route.getDistance());
+                    previous.put(to, from);
+                }
+            }
+        }
+
+        // Verificar ciclos negativos
+        for (Route route : allRoutes) {
+            Stop from = route.getSrc();
+            Stop to = route.getDest();
+
+            if (distances.get(from) != Integer.MAX_VALUE && distances.get(from) + route.getDistance() < distances.get(to)) {
+                System.out.println("El grafo contiene ciclos negativos.");
+                return Collections.emptyList(); // Ciclo negativo detectado
+            }
+        }
+
+        // Reconstruir el camino desde el mapa de predecesores
+        List<Stop> path = new ArrayList<>();
+        for (Stop at = end; at != null; at = previous.get(at)) {
+            path.add(at);
+        }
+        Collections.reverse(path);
+
+        // Si el inicio no está conectado con el final
+        if (path.size() == 1 && !path.get(0).equals(start)) {
+            return Collections.emptyList(); // Camino no encontrado
+        }
+
+        return path;
+    }
+
+    public List<Stop> floydWarshall(Stop start, Stop end) {
+        // Lista de nodos
+        List<Stop> stops = graph.getStops();
+        int n = stops.size();
+
+        // Inicializar las matrices de distancias y predecesores
+        int[][] dist = new int[n][n];
+        Stop[][] pred = new Stop[n][n];
+
+        // Mapear cada parada a un índice
+        Map<Stop, Integer> stopIndexMap = new HashMap<>();
+        for (int i = 0; i < n; i++) {
+            stopIndexMap.put(stops.get(i), i);
+        }
+
+        // Inicializar matrices de distancias y predecesores
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (i == j) {
+                    dist[i][j] = 0; // Distancia de un nodo a sí mismo
+                } else {
+                    dist[i][j] = Integer.MAX_VALUE; // Infinito
+                }
+                pred[i][j] = null; // Sin predecesor al inicio
+            }
+        }
+
+        // Poblar las distancias iniciales basadas en las rutas
+        for (LinkedList<Stop> adjacencyList : graph.getAdjList()) {
+            Stop from = adjacencyList.get(0);
+            for (int i = 1; i < adjacencyList.size(); i++) {
+                Stop to = adjacencyList.get(i);
+                Route route = graph.getRoute(from, to);
+                if (route != null) {
+                    int fromIndex = stopIndexMap.get(from);
+                    int toIndex = stopIndexMap.get(to);
+                    dist[fromIndex][toIndex] = route.getDistance();
+                    pred[fromIndex][toIndex] = from;
+                }
+            }
+        }
+
+        // Aplicar Floyd-Warshall
+        for (int k = 0; k < n; k++) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    if (dist[i][k] != Integer.MAX_VALUE && dist[k][j] != Integer.MAX_VALUE
+                            && dist[i][k] + dist[k][j] < dist[i][j]) {
+                        dist[i][j] = dist[i][k] + dist[k][j];
+                        pred[i][j] = pred[k][j];
+                    }
+                }
+            }
+        }
+
+        // Reconstruir el camino desde la matriz de predecesores
+        int startIdx = stopIndexMap.get(start);
+        int endIdx = stopIndexMap.get(end);
+
+        if (dist[startIdx][endIdx] == Integer.MAX_VALUE) {
+            return Collections.emptyList(); // No hay camino
+        }
+
+        List<Stop> path = new ArrayList<>();
+        Stop current = end;
+        while (current != null) {
+            path.add(current);
+            current = pred[stopIndexMap.get(start)][stopIndexMap.get(current)];
+        }
+
+        Collections.reverse(path);
+        return path;
+    }
+    
+    public Map<Stop, List<Route>> kruskal() {
+        // Lista de todos los nodos y aristas
+        List<Stop> nodes = graph.getStops();
+        List<Route> edges = graph.getRoutes();
+
+        // Ordenar las aristas por peso
+        edges.sort(Comparator.comparingInt(Route::getDistance));
+
+        // Inicializar estructuras para el MST y el conjunto disjunto
+        DisjointSet ds = new DisjointSet(nodes);
+        Map<Stop, List<Route>> mst = new HashMap<>();
+        for (Stop node : nodes) {
+            mst.put(node, new ArrayList<>());
+        }
+
+        // Construir el MST
+        for (Route edge : edges) {
+            Stop from = edge.getSrc();
+            Stop to = edge.getDest();
+
+            if (ds.find(from) != ds.find(to)) {
+                ds.union(from, to);
+                mst.get(from).add(edge);
+                mst.get(to).add(edge); // Para grafos no dirigidos
+            }
+        }
+
+        return mst;
+    }
+    
+    public List<Stop> kruskalMST(Stop start, Stop end) {
+    	Map<Stop, List<Route>> mst = kruskal();
+        List<Stop> path = new ArrayList<>();
+        Set<Stop> visited = new HashSet<>();
+        if (dfsMST(start, end, mst, path, visited)) {
+            return path;
+        }
+        return Collections.emptyList(); // No se encontró un camino
+    }
+
+    private boolean dfsMST(Stop current, Stop end, Map<Stop, List<Route>> mst, List<Stop> path, Set<Stop> visited) {
+        path.add(current);
+        visited.add(current);
+
+        if (current.equals(end)) {
+            return true;
+        }
+
+        for (Route route : mst.get(current)) {
+            Stop neighbor = route.getDest();
+            if (!visited.contains(neighbor)) {
+                if (dfsMST(neighbor, end, mst, path, visited)) {
+                    return true;
+                }
+            }
+        }
+
+        path.remove(path.size() - 1);
+        return false;
     }
 
     private void updateAllEvents() {
-        for (Map.Entry<String, Route> entry : graph.getRoutes().entrySet()) {
+        for (Map.Entry<String, Route> entry : graph.getRoutesMap().entrySet()) {
             Route route = entry.getValue();
             route.updateEvent();
         }
     }
 
-    public void printPath(int[] parent, int dest) {
-        LinkedList<Integer> path = new LinkedList<>();
-        int current = dest;
-        int totalTime = 0;
-        int totalDistance = 0;
-
-        while (current != -1) {
-            path.addFirst(current);
-            if (parent[current] != -1) {
-                Route route = graph.getRoute(parent[current], current);
-                totalTime += route.getAdjustedTravelTime();
-                totalDistance += route.getDistance();
-            }
-            current = parent[current];
-        }
-
-        System.out.println("Ruta más corta:");
+    public void printPath(List<Stop> path) {
         
-        for (int i = 0; i < path.size(); i++) {
-            Stop stop = graph.getStop(path.get(i));
-            System.out.print(stop.getLabel());
-            if (i < path.size() - 1) {
-                Route route = graph.getRoute(path.get(i), path.get(i + 1));
-                System.out.print(" -> [" + route.getCurrentEvent() + "] -> ");
-            }
-        }
-        
-        System.out.println("\nTiempo total de viaje (con eventos): " + totalTime + " minutos");
-        System.out.println("Distancia total: " + totalDistance + " km");
-    }
-
-    public int[] bellmanFord(int source, boolean useDistance) {
-        int[] distances = new int[V];
-        int[] parent = new int[V];
-        
-        Arrays.fill(distances, Integer.MAX_VALUE);
-        Arrays.fill(parent, -1);
-        distances[source] = 0;
-
-        for (int i = 0; i < V - 1; i++) {
-            for (int u = 0; u < V; u++) {
-                LinkedList<Stop> neighbors = graph.getAdjList().get(u);
-                for (Stop stop : neighbors) {
-                    int v = stop.getId();
-                    Route route = graph.getRoute(u, v);
-                    if (route == null) continue;
-
-                    int weight = useDistance ? route.getDistance() : route.getTravelTime();
-
-                    if (distances[u] != Integer.MAX_VALUE && 
-                        distances[u] + weight < distances[v]) {
-                        distances[v] = distances[u] + weight;
-                        parent[v] = u;
-                    }
-                }
-            }
-        }
-
-        for (int u = 0; u < V; u++) {
-            LinkedList<Stop> neighbors = graph.getAdjList().get(u);
-            for (Stop stop : neighbors) {
-                int v = stop.getId();
-                Route route = graph.getRoute(u, v);
-                if (route == null) continue;
-
-                int weight = useDistance ? route.getDistance() : route.getTravelTime();
-
-                if (distances[u] != Integer.MAX_VALUE && 
-                    distances[u] + weight < distances[v]) {
-                    System.out.println("El grafo contiene un ciclo negativo");
-                    return null;
-                }
-            }
-        }
-
-        return parent;
-    }
-
-    public int[][] floydWarshall(boolean useDistance) {
-        int[][] dist = new int[V][V];
-        int[][] next = new int[V][V];
-
-        for (int i = 0; i < V; i++) {
-            Arrays.fill(dist[i], Integer.MAX_VALUE);
-            Arrays.fill(next[i], -1);
-            dist[i][i] = 0;
-        }
-
-        for (int u = 0; u < V; u++) {
-            LinkedList<Stop> neighbors = graph.getAdjList().get(u);
-            for (Stop stop : neighbors) {
-                int v = stop.getId();
-                Route route = graph.getRoute(u, v);
-                if (route == null) continue;
-
-                int weight = useDistance ? route.getDistance() : route.getTravelTime();
-                dist[u][v] = weight;
-                next[u][v] = v;
-            }
-        }
-
-        for (int k = 0; k < V; k++) {
-            for (int i = 0; i < V; i++) {
-                for (int j = 0; j < V; j++) {
-                    if (dist[i][k] != Integer.MAX_VALUE && 
-                        dist[k][j] != Integer.MAX_VALUE && 
-                        dist[i][k] + dist[k][j] < dist[i][j]) {
-                        dist[i][j] = dist[i][k] + dist[k][j];
-                        next[i][j] = next[i][k];
-                    }
-                }
-            }
-        }
-
-        return next;
-    }
-
-    public List<Edge> prim(boolean useDistance) {
-        List<Edge> mst = new ArrayList<>();
-        boolean[] visited = new boolean[V];
-        PriorityQueue<Edge> pq = new PriorityQueue<>();
-
-        visited[0] = true;
-        LinkedList<Stop> neighbors = graph.getAdjList().get(0);
-        for (Stop stop : neighbors) {
-            int v = stop.getId();
-            Route route = graph.getRoute(0, v);
-            if (route == null) continue;
-
-            int weight = useDistance ? route.getDistance() : route.getTravelTime();
-            pq.add(new Edge(0, v, weight));
-        }
-
-        while (!pq.isEmpty() && mst.size() < V - 1) {
-            Edge edge = pq.poll();
-            if (visited[edge.dest]) continue;
-
-            visited[edge.dest] = true;
-            mst.add(edge);
-
-            neighbors = graph.getAdjList().get(edge.dest);
-            for (Stop stop : neighbors) {
-                int v = stop.getId();
-                if (!visited[v]) {
-                    Route route = graph.getRoute(edge.dest, v);
-                    if (route == null) continue;
-
-                    int weight = useDistance ? route.getDistance() : route.getTravelTime();
-                    pq.add(new Edge(edge.dest, v, weight));
-                }
-            }
-        }
-
-        return mst;
-    }
-
-    public List<Edge> kruskal(boolean useDistance) {
-        List<Edge> mst = new ArrayList<>();
-        PriorityQueue<Edge> pq = new PriorityQueue<>();
-        DisjointSet ds = new DisjointSet(V);
-
-        for (int u = 0; u < V; u++) {
-            LinkedList<Stop> neighbors = graph.getAdjList().get(u);
-            for (Stop stop : neighbors) {
-                int v = stop.getId();
-                Route route = graph.getRoute(u, v);
-                if (route == null) continue;
-
-                int weight = useDistance ? route.getDistance() : route.getTravelTime();
-                pq.add(new Edge(u, v, weight));
-            }
-        }
-
-        while (!pq.isEmpty() && mst.size() < V - 1) {
-            Edge edge = pq.poll();
-            
-            int x = ds.find(edge.src);
-            int y = ds.find(edge.dest);
-
-            if (x != y) {
-                mst.add(edge);
-                ds.union(x, y);
-            }
-        }
-
-        return mst;
-    }
-
-    public void printFloydWarshallPath(int[][] next, int src, int dest) {
-        if (next[src][dest] == -1) {
-            System.out.println("No existe camino entre estos vértices");
+    	if (path == null || path.isEmpty()) {
+            System.out.println("No se encontró un camino.");
             return;
         }
-
-        List<Integer> path = new ArrayList<>();
-        path.add(src);
+    	
+    	int totalTime = 0;
+        int totalDistance = 0;
         
-        while (src != dest) {
-            src = next[src][dest];
-            path.add(src);
-        }
-
-        System.out.println("Ruta más corta:");
+        System.out.print("Camino más corto: ");
         for (int i = 0; i < path.size(); i++) {
-            Stop stop = graph.getStop(path.get(i));
-            System.out.print(stop.getLabel());
+            System.out.print(path.get(i).getLabel());
             if (i < path.size() - 1) {
-                System.out.print(" -> ");
+                System.out.print(" -> "); // Separador entre paradas
+
+                // Obtener la ruta entre la parada actual y la siguiente
+                Route route = graph.getRoute(path.get(i), path.get(i + 1));
+                if (route != null) {
+                    totalDistance += route.getDistance();
+                    totalTime += route.getTravelTime() + route.getAdjustedTravelTime();
+                }
             }
         }
-        System.out.println();
-    }
 
-    public void printMST(List<Edge> mst) {
-        System.out.println("Árbol de expansión mínima:");
-        int totalWeight = 0;
-        for (Edge edge : mst) {
-            Stop srcStop = graph.getStop(edge.src);
-            Stop destStop = graph.getStop(edge.dest);
-            System.out.println(srcStop.getLabel() + " -> " + destStop.getLabel() + 
-                             " (peso: " + edge.weight + ")");
-            totalWeight += edge.weight;
-        }
-        System.out.println("Peso total: " + totalWeight);
+        // Imprimir la distancia y el tiempo total
+        System.out.println();
+        System.out.println("Distancia total recorrida: " + totalDistance + " unidades.");
+        System.out.println("Tiempo total de viaje: " + totalTime + " minutos.");
+
     }
 }

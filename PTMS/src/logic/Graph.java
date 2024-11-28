@@ -3,6 +3,7 @@ package logic;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -92,13 +93,7 @@ public class Graph implements Serializable{
     	Route oldRoute = routes.get(routeKey);
     	if(oldRoute != null) {
     		routes.put(routeKey, update);
-        	LinkedList<Stop> currentList = adjList.get(PTMS.getInstance().getGraph().getStopIndex(oldRoute.getSrc()));
-        	Stop targetStop = adjList.get(PTMS.getInstance().getGraph().getStopIndex(oldRoute.getSrc())).get(0);
-        	int index = currentList.indexOf(targetStop);
-        	currentList = adjList.get(PTMS.getInstance().getGraph().getStopIndex(update.getSrc()));
-        	targetStop = adjList.get(PTMS.getInstance().getGraph().getStopIndex(update.getDest())).get(0);
-        	currentList.set(index, targetStop);
-    	}	
+    	}
     }
     
     public Route getRoute(Stop src, Stop dest) {
@@ -106,8 +101,17 @@ public class Graph implements Serializable{
         return routes.get(routeKey);
     }
     
-    public Map<String, Route> getRoutes() {
-        return routes;
+    public Map<String, Route> getRoutesMap() {
+    	return routes;
+    }
+    
+    public List<Route> getRoutes() {
+        
+    	List<Route> myRoutes = new ArrayList<>();
+    	for(Entry<String, Route> entry : routes.entrySet()) {
+    		myRoutes.add(entry.getValue());
+    	}
+    	return myRoutes;
     }
 
     public ArrayList<LinkedList<Stop>> getAdjList() {
@@ -145,7 +149,7 @@ public class Graph implements Serializable{
 	public int getStopIndex(Stop s) {
 		int index = 0;	
 		for(LinkedList<Stop> currentList : adjList) {
-            if(s.equals(currentList.get(0))) {
+            if(s.equals(currentList.getFirst())) {
             	return index;
             }
             index++;
@@ -189,6 +193,25 @@ public class Graph implements Serializable{
     	}
 		
 		return null;
+	}
+	
+	public List<Stop> getNeighbors(Stop stop){
+		
+		ArrayList<Stop> neighbors = new ArrayList<>();
+		
+		for(LinkedList<Stop> currentList : adjList) {
+			if(stop.equals(currentList.getFirst())) {
+				for(Stop s : currentList) {
+					if(s != currentList.getFirst()) {
+						neighbors.add(s);
+					}
+				}
+			}
+		}
+		
+		return neighbors;
+		
+		
 	}
 	
 	
