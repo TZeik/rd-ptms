@@ -8,21 +8,38 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Line;
-
 public class Graph implements Serializable{
     /**
 	 * 
 	 */
 	private static final long serialVersionUID = -7910866032838849710L;
+	private String id;
+	private String label;
 	private ArrayList<LinkedList<Stop>> adjList;
     private Map<String, Route> routes;
 
-    public Graph() {
+    public Graph(String id, String label) {
+    	this.id = id;
+    	this.label = label;
         adjList = new ArrayList<>();
         routes = new HashMap<>();
     }
+    
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getLabel() {
+		return label;
+	}
+
+	public void setLabel(String label) {
+		this.label = label;
+	}
 
     public void addStop(Stop stop) {
         LinkedList<Stop> currentList = new LinkedList<>();
@@ -193,5 +210,10 @@ public class Graph implements Serializable{
             System.out.println();
         }
     }
-
+    
+    @Override
+    public String toString() {
+        return id+" : "+label;
+    }
+    
 }

@@ -8,6 +8,8 @@ import java.util.Optional;
 import java.util.Map.Entry;
 
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -28,6 +30,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -37,6 +40,7 @@ import javafx.scene.shape.Polygon;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import logic.Graph;
 import logic.PTMS;
 import logic.PathFinder;
 import logic.Route;
@@ -58,6 +62,8 @@ public class MainScreen extends Application{
     private Pane terminalPane;
     private VBox textContainer;
     
+    ComboBox<Graph> graphCombo;
+    
     private ComboBox<String> algorythmsCombo;
     private ComboBox<Stop> initialStopCombo;
     private ComboBox<Stop> endStopCombo;
@@ -73,6 +79,8 @@ public class MainScreen extends Application{
     private Button actionButton4;
     private Button actionButton5;
     private Button trailblazeButton;
+    private Button editGraphButton;
+    private Button deleteGraphButton;
     
     Map<Stop,Circle> graphNodes;
     Map<Route,Line> graphEdges;
@@ -91,6 +99,8 @@ public class MainScreen extends Application{
     VBox infoButtonBox;
     
     //Definitions
+    static final double menuButtonHeight = 50;
+    static final double menuButtonWidth = 300;
     static final double circleRadius = 20;
     static final double buttonWidth = 300;
     static final double comboWidth = 325;
@@ -160,6 +170,67 @@ public class MainScreen extends Application{
         menuPane.setPadding(new Insets(100,10,10,10));
         menuPane.setSpacing(5);
         menuPane.setPrefWidth(300);
+        
+        graphCombo = new ComboBox<>();
+        graphCombo.setPrefWidth(comboWidth);
+        graphCombo.getItems().add(new Graph("Añadir","Grafo"));
+        graphCombo.getItems().addAll(PTMS.getInstance().getMaps());
+        graphCombo.setValue(PTMS.getInstance().getGraph());
+        
+        graphCombo.valueProperty().addListener(new ChangeListener<Graph>() {
+            @Override
+            public void changed(ObservableValue<? extends Graph> observable, Graph oldValue, Graph newValue) {
+                if (newValue != null) { // Ensure a new value is selected
+                    int selectedIndex = graphCombo.getSelectionModel().getSelectedIndex();
+
+                    // Check if the selected index is the first position
+                    if (selectedIndex == 0) {
+                    	graphDialog();
+                    } else {
+                    	PTMS.getInstance().setGraph(graphCombo.getValue());
+                    	selectNode(null);
+                    	selectEdge(null);
+                    	remakeStops();
+                        remakeRoutes();
+                        updateGraph();
+                        updateInfo();
+                    }
+                }
+            }
+            
+        });
+        
+        editGraphButton = new Button("Editar");
+        editGraphButton.setPrefHeight(menuButtonHeight-50);
+        editGraphButton.setPrefWidth(menuButtonWidth);
+        editGraphButton.setOnAction(event -> {
+            new GraphDialog(this, 1).show();
+        });
+        
+        deleteGraphButton = new Button("Eliminar");
+        deleteGraphButton.setPrefHeight(menuButtonHeight-50);
+        deleteGraphButton.setPrefWidth(menuButtonWidth);
+        deleteGraphButton.setOnAction(event -> {
+        	Alert alert = new Alert(AlertType.CONFIRMATION);
+        	alert.setTitle("Eliminar " + PTMS.getInstance().getGraph().getLabel());
+        	alert.setHeaderText("¿Estás seguro de que quieres eliminar " + PTMS.getInstance().getGraph().getLabel() + "?");
+        	alert.setContentText("Esta acción no puede deshacerse");
+        	ButtonType yesButton = new ButtonType("Sí");
+        	ButtonType noButton = new ButtonType("No");
+        	alert.getButtonTypes().setAll(yesButton, noButton);
+        	
+        	Optional<ButtonType> result = alert.showAndWait();
+        	if(result.isPresent() && result.get() == yesButton) {
+        		deleteGraph(PTMS.getInstance().getGraph());
+        	}
+        });
+        
+        HBox menuGraphButtonPane = new HBox();
+        menuGraphButtonPane.setPrefWidth(menuButtonWidth);
+        menuGraphButtonPane.getChildren().addAll(editGraphButton, deleteGraphButton);
+        menuGraphButtonPane.setSpacing(5);
+        
+        menuPane.getChildren().addAll(graphCombo, menuGraphButtonPane);
         
         table = new TableView<>();
         table.setPrefHeight(400); // Set preferred height
@@ -231,17 +302,14 @@ public class MainScreen extends Application{
         
         menuPane.getChildren().add(table);
         
-        double buttonHeight = 50;
-        double buttonWidth = 300;
-        
         addNodeButton = new Button("Nueva Parada");
-        addNodeButton.setPrefHeight(buttonHeight);
-        addNodeButton.setPrefWidth(buttonWidth);
+        addNodeButton.setPrefHeight(menuButtonHeight);
+        addNodeButton.setPrefWidth(menuButtonWidth);
         addNodeButton.setOnAction(e -> waitForUserAction(0));
         
         searchPathButton = new Button("Buscar Camino");
-        searchPathButton.setPrefHeight(buttonHeight);
-        searchPathButton.setPrefWidth(buttonWidth);
+        searchPathButton.setPrefHeight(menuButtonHeight);
+        searchPathButton.setPrefWidth(menuButtonWidth);
         searchPathButton.setOnAction(e -> waitForUserAction(3));
 
         menuPane.getChildren().addAll(addNodeButton, searchPathButton);
@@ -802,6 +870,26 @@ public class MainScreen extends Application{
     	}
     }
     
+    private void graphDialog() {
+    	new GraphDialog(this, 0).show();
+    }
+    
+    public void addGraph(Graph graph) {
+    	PTMS.getInstance().addGraph(graph);
+    	PTMS.getInstance().setGraph(graph);
+    	graphCombo.setValue(null);
+    	graphCombo.getItems().clear();
+    	graphCombo.getItems().add(new Graph("Añadir","Grafo"));
+        graphCombo.getItems().addAll(PTMS.getInstance().getMaps());
+        graphCombo.setValue(PTMS.getInstance().getGraph());
+    	selectNode(null);
+    	selectEdge(null);
+    	remakeStops();
+    	remakeRoutes();
+    	updateInfo();
+    	updateGraph();
+    }
+    
     public void addStop(Stop stop) {
     	Circle node = new Circle(stop.getX(), stop.getY(), circleRadius);
     	node.setStyle("-fx-fill: #3498db;");
@@ -822,6 +910,21 @@ public class MainScreen extends Application{
         updateGraph();
     }
     
+    public void editGraph(Graph graph) {
+    	PTMS.getInstance().editGraph(graph);
+    	graphCombo.setValue(null);
+    	graphCombo.getItems().clear();
+    	graphCombo.getItems().add(new Graph("Añadir","Grafo"));
+        graphCombo.getItems().addAll(PTMS.getInstance().getMaps());
+        graphCombo.setValue(PTMS.getInstance().getGraph());
+    	selectNode(null);
+    	selectEdge(null);
+    	remakeStops();
+    	remakeRoutes();
+    	updateInfo();
+    	updateGraph();
+    }
+    
     public void editStop(Stop stop) {
     	graphNodes.remove(stop);
     	Circle node = new Circle(stop.getX(), stop.getY(), circleRadius);
@@ -839,6 +942,39 @@ public class MainScreen extends Application{
     	updateInfo();
     }
     
+    public void deleteGraph(Graph graph) {
+    	PTMS.getInstance().removeGraph(graph);
+    	if(PTMS.getInstance().getMaps().isEmpty()) {
+    		Graph newGraph = new Graph(PTMS.getInstance().generateGraphID(), "Nuevo Mapa");
+    		PTMS.getInstance().addGraph(newGraph);
+    		PTMS.getInstance().setGraph(newGraph);
+    		graphCombo.setValue(null);
+        	graphCombo.getItems().clear();
+        	graphCombo.getItems().add(new Graph("Añadir","Grafo"));
+            graphCombo.getItems().addAll(PTMS.getInstance().getMaps());
+            graphCombo.setValue(PTMS.getInstance().getGraph());
+            selectNode(null);
+        	selectEdge(null);
+        	remakeStops();
+        	remakeRoutes();
+        	updateInfo();
+        	updateGraph();
+    	}else {
+    		PTMS.getInstance().setGraph(PTMS.getInstance().getMaps().getFirst());
+    		graphCombo.setValue(null);
+        	graphCombo.getItems().clear();
+        	graphCombo.getItems().add(new Graph("Añadir","Grafo"));
+            graphCombo.getItems().addAll(PTMS.getInstance().getMaps());
+            graphCombo.setValue(PTMS.getInstance().getGraph());
+            selectNode(null);
+        	selectEdge(null);
+        	remakeStops();
+        	remakeRoutes();
+        	updateInfo();
+        	updateGraph();
+    	}
+    }
+    
     public void deleteStop(Stop stop) {
     	 graphNodes.remove(stop);
     	 PTMS.getInstance().getGraph().deleteStop(stop);
@@ -848,6 +984,7 @@ public class MainScreen extends Application{
     	 updateGraph();
     	 updateEdges();
     }
+    
     public void deleteRoute(Route route) {
     	graphEdges.remove(route);
     	PTMS.getInstance().getGraph().deleteRoute(route.getSrc(), route.getDest());

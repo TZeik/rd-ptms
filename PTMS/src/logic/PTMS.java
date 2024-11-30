@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class PTMS implements Serializable{
 	
@@ -14,14 +15,18 @@ public class PTMS implements Serializable{
 	 */
 	private static final long serialVersionUID = 2749425870864089238L;
 	public static PTMS soul = null;
+	private ArrayList<Graph> transportMaps;
 	private Graph publicTransportMap;
+	private int graphIdGenerator;
 	private int stopIdGenerator;
 	private int routeIdGenerator;
 	
 	public PTMS() {
 		super();
-		
-		this.publicTransportMap = new Graph();
+		this.transportMaps = new ArrayList<>();
+		this.publicTransportMap = new Graph("G-1","Nuevo Mapa");
+		this.transportMaps.add(publicTransportMap);
+		this.graphIdGenerator = 2;
 		this.stopIdGenerator = 1;
 		this.routeIdGenerator = 1;
 	}
@@ -40,9 +45,21 @@ public class PTMS implements Serializable{
 	public Graph getGraph() {
 		return publicTransportMap;
 	}
+	
+	public ArrayList<Graph> getMaps(){
+		return transportMaps;
+	}
 
 	public void setGraph(Graph publicTransportMap) {
 		this.publicTransportMap = publicTransportMap;
+	}
+	
+	public int getGraphIdGenerator() {
+		return graphIdGenerator;
+	}
+
+	public void setGraphIdGenerator(int graphIdGenerator) {
+		this.graphIdGenerator = graphIdGenerator;
 	}
 
 	public int getStopIdGenerator() {
@@ -88,6 +105,32 @@ public class PTMS implements Serializable{
 		} catch (IOException | ClassNotFoundException e) {
 			PTMS.getInstance().savePTMS();
 		}
+	}
+	
+	public void addGraph(Graph graph) {
+		PTMS.getInstance().getMaps().add(graph);
+		PTMS.getInstance().setGraphIdGenerator(PTMS.getInstance().getGraphIdGenerator() + 1);
+	}
+	
+	public void editGraph(Graph graph) {
+		for(Graph g : PTMS.getInstance().getMaps()) {
+			if(graph.getId().equals(g)) {
+				g = graph;
+			}
+		}
+	}
+	
+	public void removeGraph(Graph graph) {
+		PTMS.getInstance().getMaps().remove(graph);
+	}
+
+	
+	// Genera un código ID único para cada grafo
+	public String generateGraphID() {
+		
+		String id;
+		id = "G-" + graphIdGenerator;
+		return id;
 	}
 	
 	// Genera un código ID único para cada parada
