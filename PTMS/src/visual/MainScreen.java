@@ -5,12 +5,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import exceptions.NullStopException;
 import exceptions.SameStopException;
-
 import java.util.Map.Entry;
-
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -68,10 +65,13 @@ public class MainScreen extends Application{
     private Pane terminalPane;
     private VBox textContainer;
     private Alert alert;
+    private VBox objectInfoPane;
+    private VBox pathFinderPane;
     
     ComboBox<Graph> graphCombo;
     
     private ComboBox<String> algorythmsCombo;
+    private ComboBox<String> priorityCombo;
     private ComboBox<Stop> initialStopCombo;
     private ComboBox<Stop> endStopCombo;
     
@@ -119,7 +119,11 @@ public class MainScreen extends Application{
     static final String bellmanford = "Bellman Ford";
     static final String warshall = "Floyd Warshall";
     static final String kruskal = "Kruskal";
-
+    static final String fastest = "Más rápido";
+    static final String shortest = "Más corto";
+    static final String transferless = "Menos transbordos";
+    
+    
     @Override
     public void start(Stage primaryStage) {
     	
@@ -149,7 +153,9 @@ public class MainScreen extends Application{
         infoPane.setPrefWidth(300); // Set a fixed width for the info pane
 
         // Add the symbol pane and labels/buttons to the info pane
-        infoPane.getChildren().add(createObjectInfoPane());
+        objectInfoPane = createObjectInfoPane();
+        pathFinderPane = createPathFinderPane(null, null);
+        infoPane.getChildren().add(objectInfoPane);
         
         StackPane bottomPane = new StackPane();
         bottomPane.getStyleClass().add("pane");
@@ -157,10 +163,10 @@ public class MainScreen extends Application{
         
         // Creating Instruction Box Label
         blankBox = new StackPane();
-        blankBox.setPadding(new Insets(8.5));
-        blankBox.getStyleClass().add("pane");
+        blankBox.getStyleClass().add("blankpane");
+        blankBox.setPrefHeight(20);
         instructionBox = new StackPane();
-        instructionBox.getStyleClass().add("pane");
+        instructionBox.getStyleClass().add("infopane");
         instructionLabel = new Label("");
         instructionLabel.getStyleClass().add("label");
         instructionBox.getChildren().add(instructionLabel);
@@ -180,6 +186,7 @@ public class MainScreen extends Application{
         primaryStage.show();
         
         if(PTMS.getInstance().checkPathFinderUsability()) searchPathButton.setDisable(false); else searchPathButton.setDisable(true);
+        
         remakeStops();
         remakeRoutes();
         updateGraph();
@@ -457,14 +464,21 @@ public class MainScreen extends Application{
     	
     	Label titleLabel = new Label("Buscar camino");
     	
+    	Label algorythmsLabel = new Label("Algoritmo a utilizar");
+    	Label initialStopLabel = new Label("Inicio");
+    	Label endStopLabel = new Label("Destino");
+    	Label priorityLabel = new Label("Prioridad");
+    	
         algorythmsCombo = new ComboBox<>();
         initialStopCombo = new ComboBox<>();
         endStopCombo = new ComboBox<>();
+        priorityCombo = new ComboBox<>();
         
         algorythmsCombo.setPrefWidth(comboWidth);
         initialStopCombo.setPrefWidth(comboWidth);
         endStopCombo.setPrefWidth(comboWidth);
-        
+        priorityCombo.setPrefWidth(comboWidth);
+                
         VBox pathInfoPane = new VBox();
         pathInfoPane.setPadding(new Insets(20,10,10,10));
     	pathInfoPane.setSpacing(4);
@@ -485,12 +499,13 @@ public class MainScreen extends Application{
         trailblazeButton.setPrefWidth(buttonWidth);
         
         algorythmsCombo.getItems().addAll(dijkstra, bellmanford, warshall, kruskal);
-
+        priorityCombo.getItems().addAll(fastest, shortest, transferless);
         initialStopCombo.getItems().addAll(PTMS.getInstance().getGraph().getStops());
         endStopCombo.getItems().addAll(PTMS.getInstance().getGraph().getStops());
         
         //ComboBox place-holders
         algorythmsCombo.setValue(dijkstra);
+        priorityCombo.setValue(shortest);
         if(start == null) initialStopCombo.setValue(PTMS.getInstance().getGraph().getStops().getFirst()); else initialStopCombo.setValue(start);
         endStopCombo.setValue(end);
         
@@ -498,7 +513,7 @@ public class MainScreen extends Application{
         trailblazeButton.setOnAction(event -> {
         	try {
         		PTMS.getInstance().checkSameStopPath(initialStopCombo.getValue(), endStopCombo.getValue());
-        		searchPath(initialStopCombo.getValue(), endStopCombo.getValue(), algorythmsCombo.getValue());
+        		searchPath(initialStopCombo.getValue(), endStopCombo.getValue(), algorythmsCombo.getValue(), priorityCombo.getValue());
                 waitForUserAction(4);
         	}catch(SameStopException | NullStopException ex) {
         		alert = new Alert(AlertType.INFORMATION);
@@ -508,7 +523,7 @@ public class MainScreen extends Application{
                 
                 DialogPane dialogPane = alert.getDialogPane();
             	dialogPane.getStylesheets().add(
-            	   getClass().getResource("alert.css").toExternalForm());
+            	   getClass().getResource("monoalert.css").toExternalForm());
             	dialogPane.getStyleClass().add("dialog-pane");
                 
                 // Show the alert and wait for the user's response
@@ -520,7 +535,7 @@ public class MainScreen extends Application{
         	}
         });
         
-        pathFinderPane.getChildren().addAll(titleLabel, algorythmsCombo, initialStopCombo, endStopCombo, pathInfoPane,terminalPane, trailblazeButton);
+        pathFinderPane.getChildren().addAll(titleLabel, algorythmsLabel, algorythmsCombo, initialStopLabel, initialStopCombo, endStopLabel, endStopCombo, priorityLabel, priorityCombo, pathInfoPane,terminalPane, trailblazeButton);
         pathFinderPane.setAlignment(Pos.TOP_CENTER); 
         
     	return pathFinderPane;
@@ -557,6 +572,8 @@ public class MainScreen extends Application{
     		instructionLabel.setText("Haz click para insertar la parada o presiona ESC para cancelar");
             root.setTop(instructionBox);
             
+            disableAll();
+            
             // Mouse click listener
             graphPane.setOnMouseClicked(this::handleAddStop);
 
@@ -572,6 +589,8 @@ public class MainScreen extends Application{
     		graphPane.setCursor(Cursor.CROSSHAIR);
     		instructionLabel.setText("Haz click en otra parada para conectarla o presiona ESC para cancelar");
             root.setTop(instructionBox);
+            
+            disableAll();
             
             // Mouse click listener
             graphPane.setOnMouseClicked(this::handleAddRoute);
@@ -589,6 +608,8 @@ public class MainScreen extends Application{
     		instructionLabel.setText("Haz click para mover la parada o presiona ESC para cancelar");
             root.setTop(instructionBox);
             
+            disableAll();
+            
             // Mouse click listener
             graphPane.setOnMouseClicked(this::handleMoveStop);
 
@@ -605,6 +626,8 @@ public class MainScreen extends Application{
     		instructionLabel.setText("Haz click en la parada de destino o presiona ESC para cancelar");
             root.setTop(instructionBox);
             
+            disableAll();
+            
             // Mouse click listener
             graphPane.setOnMouseClicked(this::handlePathFinder);
 
@@ -619,18 +642,9 @@ public class MainScreen extends Application{
     	if(arg == 4) {
     		instructionLabel.setText("Haz click en cualquier lugar o presiona ESC para continuar");
     		root.setTop(instructionBox);
-    		
-    		graphCombo.setDisable(true);
-        	editGraphButton.setDisable(true);
-        	deleteGraphButton.setDisable(true);
-    		table.setDisable(true);
-        	addNodeButton.setDisable(true);
-        	searchPathButton.setDisable(true);
-    		algorythmsCombo.setDisable(true);
-    		initialStopCombo.setDisable(true);
-    		endStopCombo.setDisable(true);
-    		trailblazeButton.setDisable(true);
-    		
+
+    		disableAll();
+
     		graphPane.setOnMouseClicked(this::handleSearchedPath);
     		
     		graphPane.getScene().setOnKeyPressed(event -> {
@@ -651,6 +665,7 @@ public class MainScreen extends Application{
     	root.setTop(blankBox);
         graphPane.setCursor(Cursor.DEFAULT);
         graphPane.setOnMouseClicked(this::handleObjectClick);
+        enableAll();
     }
     
     private void handleAddStop(MouseEvent event) {
@@ -745,13 +760,14 @@ public class MainScreen extends Application{
                 selectedStop = getVisualStop(node);
             }
         }
-        if(lastNode != null && lastNode.equals(selectedNode)) {
+        if((lastNode != null && lastNode.equals(selectedNode)) || (lastNode == null && selectedNode == null)) {
         	selectNode(null);
         	selectedStop = null;
         	endUserAction();
-        }else {
+        }else{
             infoPane.getChildren().clear();
-            infoPane.getChildren().add(createPathFinderPane(lastStop, selectedStop));
+            pathFinderPane = createPathFinderPane(lastStop, selectedStop);
+            infoPane.getChildren().add(pathFinderPane);
             endUserAction();
         }
     	
@@ -793,26 +809,79 @@ public class MainScreen extends Application{
     	}
     };
     
-    private void searchPath(Stop from, Stop to, String algorythm) {
+    private void searchPath(Stop from, Stop to, String algorythm, String priority) {
     	
     	PathFinder pathfinder = new PathFinder(PTMS.getInstance().getGraph());
     	List<Stop> path;
     	
     	switch(algorythm) {
     	case dijkstra:
-    		path = pathfinder.dijkstra(from, to);
+    		switch(priority) {
+    		case shortest:
+        		path = pathfinder.dijkstra_shortest(from, to);
+    			break;
+    		case fastest:
+    			path = pathfinder.dijkstra_fastest(from, to);
+    			break;
+    		case transferless:
+    			path = pathfinder.dijkstra_transferless(from, to);
+    			break;
+    		default:
+    			path = pathfinder.dijkstra_shortest(from, to);
+    			break;
+    		}
     		break;
     	case bellmanford:
-    		path = pathfinder.bellmanFord(from, to);
+    		switch(priority) {
+    		case shortest:
+    			path = pathfinder.bellmanFord_shortest(from, to);
+    			break;
+    		case fastest:
+    			path = pathfinder.bellmanFord_fastest(from, to);
+    			break;
+    		case transferless:
+    			path = pathfinder.bellmanFord_transferless(from, to);
+    			break;
+    		default:
+    			path = pathfinder.bellmanFord_shortest(from, to);
+    			break;
+    		}
+    		
     		break;
     	case warshall:
-    		path = pathfinder.floydWarshall(from, to);
+    		switch(priority) {
+    		case shortest:
+    			path = pathfinder.floydWarshall_shortest(from, to);
+    			break;
+    		case fastest:
+    			path = pathfinder.floydWarshall_fastest(from, to);
+    			break;
+    		case transferless:
+    			path = pathfinder.floydWarshall_transferless(from, to);
+    			break;
+    		default:
+    			path = pathfinder.floydWarshall_shortest(from, to);
+    			break;
+    		}
     		break;
     	case kruskal:
-    		path = pathfinder.kruskalMST(from, to);
+    		switch(priority) {
+    		case shortest:
+    			path = pathfinder.kruskalMST_shortest(from, to);
+    			break;
+    		case fastest:
+    			path = pathfinder.kruskalMST_fastest(from, to);
+    			break;
+    		case transferless:
+    			path = pathfinder.kruskalMST_transferless(from, to);
+    			break;
+    		default:
+    			path = pathfinder.kruskalMST_shortest(from, to);
+    			break;
+    		}	
     		break;
     	default:
-    		path = pathfinder.dijkstra(from, to);
+    		path = pathfinder.dijkstra_shortest(from, to);
     		break;
     	}
     	
@@ -862,16 +931,8 @@ public class MainScreen extends Application{
     
     private void resetTrailblaze() {
     	
-    	graphCombo.setDisable(false);
-    	editGraphButton.setDisable(false);
-    	deleteGraphButton.setDisable(false);
-    	table.setDisable(false);
-    	addNodeButton.setDisable(false);
-    	searchPathButton.setDisable(false);
-    	algorythmsCombo.setDisable(false);
-		initialStopCombo.setDisable(false);
-		endStopCombo.setDisable(false);
-		trailblazeButton.setDisable(false);
+    	enableAll();
+    
     	
     	for(Circle node : graphNodes.values()) {
     		node.setStyle("-fx-fill: #3498db;");
@@ -1141,11 +1202,6 @@ public class MainScreen extends Application{
     	
     	// Adding nodes to the graphPane
     	for(Entry<Stop, Circle> entry : graphNodes.entrySet()) {
-    		Label nodeLabel = new Label(entry.getKey().getLabel());
-    		nodeLabel.getStyleClass().add("label");
-    		nodeLabel.setLayoutX(entry.getKey().getX());
-    		nodeLabel.setLayoutY(entry.getKey().getY());
-        	graphPane.getChildren().add(nodeLabel);
     		graphPane.getChildren().add(entry.getValue());
     	}
     	// Adding edges to the graphPane
@@ -1167,6 +1223,14 @@ public class MainScreen extends Application{
     	    // Add the edge and the arrowhead to the root pane
     		graphPane.getChildren().addAll(l, arrowhead);
    		}
+    	
+    	for(Entry<Stop, Circle> entry : graphNodes.entrySet()) {
+    		Label nodeLabel = new Label(entry.getKey().getLabel());
+    		nodeLabel.getStyleClass().add("nodelabel");
+    		nodeLabel.setLayoutX(entry.getValue().getCenterX());
+    		nodeLabel.setLayoutY(entry.getValue().getCenterY()+20);
+           	graphPane.getChildren().add(nodeLabel);
+    	}
     }
 
     private void updateEdges() {
@@ -1222,6 +1286,42 @@ public class MainScreen extends Application{
 
         return arrowhead;
     }
-  
-     
+    
+    private void enableAll() {
+    	graphCombo.setDisable(false);
+    	editGraphButton.setDisable(false);
+    	deleteGraphButton.setDisable(false);
+    	table.setDisable(false);
+    	addNodeButton.setDisable(false);
+    	searchPathButton.setDisable(false);
+    	algorythmsCombo.setDisable(false);
+		initialStopCombo.setDisable(false);
+		endStopCombo.setDisable(false);
+		priorityCombo.setDisable(false);
+		trailblazeButton.setDisable(false);
+		actionButton1.setDisable(false);
+		actionButton2.setDisable(false);
+		actionButton3.setDisable(false);
+		actionButton4.setDisable(false);
+		actionButton5.setDisable(false);
+    }
+    
+    private void disableAll() {
+    	graphCombo.setDisable(true);
+    	editGraphButton.setDisable(true);
+    	deleteGraphButton.setDisable(true);
+		table.setDisable(true);
+    	addNodeButton.setDisable(true);
+    	searchPathButton.setDisable(true);
+		algorythmsCombo.setDisable(true);
+		initialStopCombo.setDisable(true);
+		endStopCombo.setDisable(true);
+		priorityCombo.setDisable(true);
+		trailblazeButton.setDisable(true);
+		actionButton1.setDisable(true);
+		actionButton2.setDisable(true);
+		actionButton3.setDisable(true);
+		actionButton4.setDisable(true);
+		actionButton5.setDisable(true);
+    }
 }

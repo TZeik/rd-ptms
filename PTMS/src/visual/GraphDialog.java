@@ -1,10 +1,16 @@
 package visual;
 
+import exceptions.BadNameException;
+import exceptions.EmptyNameException;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -40,18 +46,69 @@ public class GraphDialog extends Stage{
         cancelButton.setPrefHeight(buttonHeight);
         cancelButton.setPrefWidth(buttonWidth);
         
+        labelField.setPromptText("Digite un nombre");
+
+        // Add a listener to restrict input to alphanumeric characters and spaces
+        labelField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("[a-zA-Z0-9 ]*")) { // Includes spaces
+                labelField.setText(oldValue);
+            }
+        });
+        
         // Set action for the buttons
         saveButton.setOnAction(e -> {
         	if(update == 0) {
-        		Graph newGraph = new Graph(PTMS.getInstance().generateGraphID(), labelField.getText());
-            	app.addGraph(newGraph);
-                close();
+        		try {
+					PTMS.getInstance().checkVerifiedName(labelField.getText());
+					Graph newGraph = new Graph(PTMS.getInstance().generateGraphID(), labelField.getText());
+	            	app.addGraph(newGraph);
+	                close();
+				} catch (BadNameException | EmptyNameException ex) {
+					Alert info = new Alert(AlertType.INFORMATION);
+	                info.setTitle("Error");
+	                info.setHeaderText("No se pudo agregar el mapa");
+	                info.setContentText(ex.getMessage());
+	                
+	                DialogPane dialogPane = info.getDialogPane();
+	            	dialogPane.getStylesheets().add(
+	            	   getClass().getResource("alert.css").toExternalForm());
+	            	dialogPane.getStyleClass().add("dialog-pane");
+	                
+	                // Show the alert and wait for the user's response
+	                info.showAndWait().ifPresent(response -> {
+	                    if (response == ButtonType.OK) {
+	                    	
+	                    }
+	                });
+				}
+        		
         	}
         	if(update == 1) {
-        		Graph editGraph = PTMS.getInstance().getGraph();
-        		editGraph.setLabel(labelField.getText());
-        		app.editGraph(editGraph);
-        		close();
+        		try {
+					PTMS.getInstance().checkVerifiedName(labelField.getText());
+					Graph editGraph = PTMS.getInstance().getGraph();
+	        		editGraph.setLabel(labelField.getText());
+	        		app.editGraph(editGraph);
+	        		close();
+				} catch (BadNameException | EmptyNameException ex) {
+					Alert info = new Alert(AlertType.INFORMATION);
+	                info.setTitle("Error");
+	                info.setHeaderText("No se pudo editar el mapa");
+	                info.setContentText(ex.getMessage());
+	                
+	                DialogPane dialogPane = info.getDialogPane();
+	            	dialogPane.getStylesheets().add(
+	            	   getClass().getResource("monoalert.css").toExternalForm());
+	            	dialogPane.getStyleClass().add("dialog-pane");
+	                
+	                // Show the alert and wait for the user's response
+	                info.showAndWait().ifPresent(response -> {
+	                    if (response == ButtonType.OK) {
+	                    	
+	                    }
+	                });
+				}
+        		
         	}
         });
         
@@ -65,13 +122,14 @@ public class GraphDialog extends Stage{
         HBox mybuttons = new HBox(5);
         layout.setPadding(new Insets(10));
         layout.getChildren().addAll(
-        	new Label("Nombre:"), labelField,
+        	new Label("Nombre"), labelField,
             mybuttons
         );
         mybuttons.getChildren().addAll(saveButton, cancelButton);
 
         Scene scene = new Scene(layout, 300, 120);
         scene.getStylesheets().add(getClass().getResource("modal.css").toExternalForm());
+        layout.requestFocus();
         setScene(scene);
 	}
 	

@@ -164,6 +164,11 @@ public class PTMS implements Serializable{
 		}
 	}
 	
+	public void checkVerifiedName(String name) throws BadNameException, EmptyNameException {
+		if(name.isEmpty()) throw new EmptyNameException("El nombre no puede estar vacío");
+		if(name.length() < 0 || name.length() > 30) throw new BadNameException("El nombre debe contener entre 1 a 30 caracteres");	
+	}
+	
 	public void checkSameStopPath(Stop a, Stop b) throws SameStopException, NullStopException{
 		if(a == null) throw new NullStopException("La parada fuente no existe");
 		if(b == null) throw new NullStopException("La parada de destino no existe");

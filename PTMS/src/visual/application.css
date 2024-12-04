@@ -14,6 +14,24 @@
     -fx-padding: 10;
 }
 
+.infopane {
+    -fx-background-color: #4F4F6E; /* Slightly lighter blue for pane backgrounds */
+    -fx-border-color: #3B3B4F; /* Subtle border for panes */
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 10;
+}
+
+.blankpane {
+    -fx-background-color: #2A2A3C; /* Slightly lighter blue for pane backgrounds */
+    -fx-border-color: #3B3B4F; /* Subtle border for panes */
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 17.5;
+}
+
 .button {
     -fx-background-color: #3B3B4F; /* Dark button */
     -fx-text-fill: #FFFFFF;
@@ -30,12 +48,18 @@
     -fx-text-fill: #A6A6D9; /* Softer text for labels */
 }
 
+.nodelabel{
+    -fx-text-fill: #FFFFFF; /* Light gray text */
+    -fx-font-size: 20.0px;
+}
+
 .text-field {
     -fx-background-color: #2A2A3C;
     -fx-text-fill: #FFFFFF;
     -fx-border-color: #3B3B4F;
     -fx-border-radius: 3px;
     -fx-padding: 5;
+    -fx-prompt-text-fill: gray;
 }
 
 .diagram-pane {

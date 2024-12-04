@@ -58,5 +58,5 @@
 .button-bar {
   	-fx-background-color: #2E3B47; /* Dark background to match the pane */
   	-fx-alignment: center;
-	-fx-padding: 0 16px 0 0;
+	-fx-padding: 0 84px 0 0;
 }
