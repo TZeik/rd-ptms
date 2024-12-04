@@ -15,7 +15,7 @@ public class Route implements Serializable {
     private String label;
     private WeatherTrafficEvent currentEvent;
 
-    public Route(String id, int distance, Stop src, Stop dest, String label) {
+    public Route(String id, double distance, Stop src, Stop dest, String label) {
         this.id = id;
         this.distance = distance;
         this.travelTime = 1;

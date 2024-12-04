@@ -7,6 +7,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import exceptions.*;
 
 public class PTMS implements Serializable{
 	
@@ -147,6 +148,26 @@ public class PTMS implements Serializable{
 		String id;
 		id = "R-" + routeIdGenerator;
 		return id;
+	}
+	
+	public boolean checkPathFinderUsability() {
+		
+		if(PTMS.getInstance().getGraph().getStops().size() > 1 && PTMS.getInstance().getGraph().getRoutes().size() > 0) return true;
+		else return false;
+		
+	}
+	
+	public void checkSameStop(Route route) throws SameStopException {
+		for(Route r : PTMS.getInstance().getGraph().getRoutes()) {
+			if(r.getSrc().equals(route.getSrc()) && r.getDest().equals(route.getDest()))
+				throw new SameStopException("Ya existe una parada con la misma fuente y destino");
+		}
+	}
+	
+	public void checkSameStopPath(Stop a, Stop b) throws SameStopException, NullStopException{
+		if(a == null) throw new NullStopException("La parada fuente no existe");
+		if(b == null) throw new NullStopException("La parada de destino no existe");
+		if(a.equals(b)) throw new SameStopException("Las paradas no puedes ser iguales");
 	}
 	
 }

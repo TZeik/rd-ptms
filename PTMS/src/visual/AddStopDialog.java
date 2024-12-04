@@ -9,10 +9,15 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import logic.PTMS;
 import logic.Stop;
 
 public class AddStopDialog extends Stage{
+	
+	static final int buttonWidth = 150;
+	static final int buttonHeight = 28;
+	
 	private TextField labelField;
     private Button addButton;
     private Button cancelButton;
@@ -20,11 +25,17 @@ public class AddStopDialog extends Stage{
     public AddStopDialog(MainScreen app, Stop selectedStop) {
         setTitle("Agregar Parada");
         initModality(Modality.APPLICATION_MODAL);
+        initStyle(StageStyle.UNDECORATED);
         
         labelField = new TextField();
+        labelField.getStyleClass().add("text-field");
         addButton = new Button("Crear");
         cancelButton = new Button("Cancelar");
         
+        addButton.setPrefHeight(buttonHeight);
+        addButton.setPrefWidth(buttonWidth);
+        cancelButton.setPrefHeight(buttonHeight);
+        cancelButton.setPrefWidth(buttonWidth);
         
         // Set action for the Add button
         addButton.setOnAction(e -> {
@@ -49,6 +60,7 @@ public class AddStopDialog extends Stage{
         mybuttons.getChildren().addAll(addButton, cancelButton);
 
         Scene scene = new Scene(layout, 300, 110);
+        scene.getStylesheets().add(getClass().getResource("modal.css").toExternalForm());
         setScene(scene);
     }
 }

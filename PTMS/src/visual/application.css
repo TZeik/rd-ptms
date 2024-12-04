@@ -1,0 +1,181 @@
+/* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
+.root {
+    -fx-background-color: #1E1E2E; /* Dark blue background */
+    -fx-text-fill: #FFFFFF; /* White text */
+    -fx-font-family: 'Segoe UI', sans-serif;
+}
+
+.pane {
+    -fx-background-color: #2A2A3C; /* Slightly lighter blue for pane backgrounds */
+    -fx-border-color: #3B3B4F; /* Subtle border for panes */
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 10;
+}
+
+.button {
+    -fx-background-color: #3B3B4F; /* Dark button */
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: transparent;
+    -fx-background-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #4E4E65; /* Slightly lighter on hover */
+}
+
+.label {
+    -fx-text-fill: #A6A6D9; /* Softer text for labels */
+}
+
+.text-field {
+    -fx-background-color: #2A2A3C;
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: #3B3B4F;
+    -fx-border-radius: 3px;
+    -fx-padding: 5;
+}
+
+.diagram-pane {
+    -fx-background-color: #1E1E2E; /* Dark blue background */
+    -fx-border-color: #3B3B4F; /* Subtle border */
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+}
+
+.grid-lines {
+    -fx-stroke: #2A2A3C; /* Grid line color */
+    -fx-stroke-width: 0.5; /* Thin lines for grid */
+}
+
+.highlighted-grid-lines {
+    -fx-stroke: #3B3B4F; /* Slightly brighter for highlighted grid lines */
+    -fx-stroke-width: 1; /* Thicker for emphasis */
+}
+
+.diagram-element {
+    -fx-fill: #A6A6D9; /* Default color for diagram elements */
+    -fx-stroke: #FFFFFF; /* Outline for visibility */
+    -fx-stroke-width: 1;
+}
+
+.diagram-element:hover {
+    -fx-fill: #D1D1E0; /* Lighter fill on hover */
+    -fx-stroke: #FFD700; /* Gold outline for hover effect */
+}
+
+.table-view {
+    -fx-background-color: #1E1E2E; /* Dark blue background */
+    -fx-border-color: #3B3B4F; /* Subtle border for the table */
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 5;
+}
+
+.table-view .column-header {
+    -fx-background-color: #2A2A3C; /* Header background */
+    -fx-text-fill: #A6A6D9; /* Softer text for headers */
+    -fx-font-weight: bold; /* Bold text for headers */
+    -fx-border-color: #3B3B4F; /* Border between header cells */
+    -fx-border-width: 0 0 1px 0;
+}
+
+.table-view .column-header:hover {
+    -fx-background-color: #3B3B4F; /* Slightly brighter on hover */
+}
+
+.table-view .table-row-cell {
+    -fx-background-color: #1E1E2E; /* Row background */
+    -fx-border-color: transparent; /* No visible border */
+}
+
+.table-view .table-row-cell:selected {
+    -fx-background-color: #3B3B4F; /* Highlight selected row */
+    -fx-text-fill: #FFD700; /* Gold text for selected row */
+}
+
+.table-view .table-row-cell:hover {
+    -fx-background-color: #2A2A3C; /* Highlight hovered row */
+}
+
+.table-view .table-cell {
+    -fx-text-fill: #FFFFFF; /* Ensure cell text is white */
+    -fx-border-color: #3B3B4F; /* Subtle border between cells */
+    -fx-padding: 5;
+}
+
+/* Style the ComboBox */
+.combo-box {
+    -fx-background-color: #2A2A3C; /* Dark background for ComboBox */
+    -fx-border-color: #3B3B4F; /* Subtle border */
+    -fx-border-radius: 5px;
+    -fx-padding: 5px;
+    -fx-text-fill: #FFFFFF; /* Text color */
+    -fx-font-size: 14px;
+}
+
+/* Style the arrow button of ComboBox */
+.combo-box .arrow {
+    -fx-background-color: #3B3B4F; /* Dark button background */
+    -fx-background-radius: 5px;
+    -fx-text-fill: #FFFFFF; /* Arrow button text color */
+}
+
+/* Style ComboBox drop-down list */
+.combo-box .list-cell {
+    -fx-background-color: #1E1E2E; /* Dark background for list items */
+    -fx-text-fill: #FFFFFF; /* Text color */
+    -fx-font-size: 14px;
+    -fx-padding: 5px;
+}
+
+.combo-box .list-cell:hover {
+    -fx-background-color: #2A2A3C; /* Slightly lighter on hover */
+}
+
+.combo-box .list-cell:selected {
+    -fx-background-color: #3B3B4F; /* Highlight selected item */
+    -fx-text-fill: #FFD700; /* Gold text for selected item */
+}
+
+.combo-box .combo-box-popup {
+    -fx-background-color: #1E1E2E; /* Dark background for dropdown */
+    -fx-border-color: #3B3B4F; /* Subtle border */
+}
+
+/* Style the editable text field of ComboBox */
+.combo-box .text-field {
+    -fx-background-color: #2A2A3C; /* Dark background for text field */
+    -fx-text-fill: #FFFFFF; /* Text color */
+    -fx-border-color: #3B3B4F; /* Border color */
+    -fx-border-radius: 5px;
+    -fx-padding: 5px;
+}
+
+/* Style the ComboBox when focused */
+.combo-box:focused {
+    -fx-border-color: #FFD700; /* Gold border when focused */
+}
+
+/* Style for the bus station stop circle */
+.stop-circle {
+    -fx-shape: "M 0,10 A 10,10 0 1,1 20,10 A 10,10 0 1,1 0,10"; /* Circular shape */
+    -fx-fill: #007bff; /* Blue color for the bus stop dot */
+    -fx-stroke: #0056b3; /* Darker blue stroke */
+    -fx-stroke-width: 2px; /* Stroke width */
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 8, 0.5, 2, 2); /* Optional shadow for 3D effect */
+}
+
+/* Optional: Add text to the bus stop, such as 'Station' */
+.stop-text {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-text-alignment: center;
+    -fx-background-color: rgba(0, 0, 0, 0.6); /* Dark background behind text for visibility */
+    -fx-padding: 4px;
+    -fx-background-radius: 5px;
+}

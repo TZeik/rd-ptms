@@ -289,6 +289,7 @@ public class PathFinder {
     	
     	int totalTime = 0;
         int totalDistance = 0;
+        int totalTranship = 0;
         
         System.out.print("Camino más corto: ");
         for (int i = 0; i < path.size(); i++) {
@@ -301,6 +302,7 @@ public class PathFinder {
                 if (route != null) {
                     totalDistance += route.getDistance();
                     totalTime += route.getTravelTime() + route.getAdjustedTravelTime();
+                    totalTranship++;
                 }
             }
         }
@@ -309,12 +311,14 @@ public class PathFinder {
         System.out.println();
         System.out.println("Distancia total recorrida: " + totalDistance + " unidades.");
         System.out.println("Tiempo total de viaje: " + totalTime + " minutos.");
+        System.out.println("Transbordos totales: " + (totalTranship-1) + " transbordos.");
 
     }
         
     public int[] getPathDetails(List<Stop> path) {
     	int totalDistance = 0;
     	int totalTime = 0;
+    	int totalTranship = 0;
     	
     	for (int i = 0; i < path.size(); i++) {
             if (i < path.size() - 1) {
@@ -323,34 +327,49 @@ public class PathFinder {
                 if (route != null) {
                 	totalDistance += route.getDistance();
                 	totalTime += route.getTravelTime() + route.getAdjustedTravelTime();
+                	totalTranship++;
                 }
             }
         }
     	
-    	return new int[] {totalDistance, totalTime};
+    	return new int[] {totalDistance, totalTime, totalTranship-1};
     }
     
     public List<String> getRouteDetails(List<Stop> path){
     	
     	List<String> routeDetails = new ArrayList<String>();
+    	routeDetails.add("");
+    	routeDetails.add("Eventos Ocurrentes (En todas las rutas):");
+    	routeDetails.add("-----------------------------------------------------");
     	
+    	for(Route r : PTMS.getInstance().getGraph().getRoutes()) {
+    		if(r.getCurrentEvent().getType().getDescription() != "Normal") {
+    			routeDetails.add("En la ruta "+r.getLabel());
+        		routeDetails.add("Desde "+r.getSrc().getLabel()+" hasta "+r.getDest().getLabel());
+            	routeDetails.add("Se produjo un evento: "+r.getCurrentEvent().getType().getDescription());
+            	routeDetails.add("Factor de Retraso: "+r.getCurrentEvent().getType().getFactor());
+            	routeDetails.add("-----------------------------------------------------");
+            	System.out.println("En la ruta "+r.getLabel()+" que va desde "+r.getSrc().getLabel()+" hasta "+r.getDest().getLabel()+" se produjo un/a "+r.getCurrentEvent().getType().getDescription());
+            	System.out.println("Factor de Retraso: "+r.getCurrentEvent().getType().getFactor());
+    		}else {
+    			routeDetails.add("En la ruta "+r.getLabel());
+        		routeDetails.add("Desde "+r.getSrc().getLabel()+" hasta "+r.getDest().getLabel());
+        		routeDetails.add("No se produjeron eventos");
+        		routeDetails.add("Factor de Retraso: "+r.getCurrentEvent().getType().getFactor());
+        		routeDetails.add("-----------------------------------------------------");
+    		}
+    	}
+    	
+    	routeDetails.add("Camino más corto encontrado:");
+    	String writedPath = "";
     	for (int i = 0; i < path.size(); i++) {
-            if (i < path.size() - 1) {
-                // Obtener la ruta entre la parada actual y la siguiente
-                Route route = graph.getRoute(path.get(i), path.get(i + 1));
-                if (route != null) {
-                	if(route.getCurrentEvent().getType().getDescription() != "Normal") {
-                		routeDetails.add("En la ruta "+route.getLabel()+" que va desde "+route.getSrc().getLabel()+" hasta "+route.getDest().getLabel());
-                    	routeDetails.add("Se produjo un evento: "+route.getCurrentEvent().getType().getDescription());
-                    	routeDetails.add("Factor de Retraso: "+route.getCurrentEvent().getType().getFactor());
-                    	System.out.println("En la ruta "+route.getLabel()+" que va desde "+route.getSrc().getLabel()+" hasta "+route.getDest().getLabel()+" se produjo un/a "+route.getCurrentEvent().getType().getDescription());
-                    	System.out.println("Factor de Retraso: "+route.getCurrentEvent().getType().getFactor());
-                	}
-                	
-                }
+            writedPath += path.get(i).getLabel();
+    		if (i < path.size() - 1) {
+            	writedPath += " -> ";
             }
         }
-    	
+    	routeDetails.add(writedPath);
+    	routeDetails.add("-----------------------------------------------------");
     	return routeDetails;
     	
     }

@@ -5,6 +5,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import exceptions.NullStopException;
+import exceptions.SameStopException;
+
 import java.util.Map.Entry;
 
 import javafx.application.Application;
@@ -21,6 +25,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
@@ -39,6 +44,7 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.stage.WindowEvent;
 import logic.Graph;
 import logic.PTMS;
@@ -61,6 +67,7 @@ public class MainScreen extends Application{
     private Label instructionLabel;
     private Pane terminalPane;
     private VBox textContainer;
+    private Alert alert;
     
     ComboBox<Graph> graphCombo;
     
@@ -70,6 +77,7 @@ public class MainScreen extends Application{
     
 	private Label distanceDetail;
     private Label timeDetail;
+    private Label transhipDetail;
     
     private Button addNodeButton;
     private Button searchPathButton;
@@ -99,6 +107,9 @@ public class MainScreen extends Application{
     VBox infoButtonBox;
     
     //Definitions
+    static final int gridSize = 20; // Grid cell size
+    static final int width = 1320; // Graph Pane width
+    static final int height = 1020; // Graph Pane height
     static final double menuButtonHeight = 50;
     static final double menuButtonWidth = 300;
     static final double circleRadius = 20;
@@ -112,41 +123,48 @@ public class MainScreen extends Application{
     @Override
     public void start(Stage primaryStage) {
     	
-        primaryStage.setTitle("Sistema de Transporte Público PTMS");
+    	primaryStage.setTitle("Sistema de Transporte Público (PTMS)");
         primaryStage.setMaximized(true);
         primaryStage.setResizable(false);
+        
         
         graphNodes = new HashMap<>();
         graphEdges = new HashMap<>();
         
         // Left Panel: Menu
         VBox menuPane = createMenuPane();
+        menuPane.getStyleClass().add("pane");
         menuPane.setSpacing(20);
 
         // Center Panel: Graph view
         graphPane = new Pane();
-        graphPane.setStyle("-fx-background-color: lightgray;");
+        graphPane.getStyleClass().add("diagram-pane");
         graphPane.setOnMouseClicked(this::handleObjectClick);
+       
 
         // Right Panel: Stop info/details
         infoPane = new VBox();
         infoPane.setPadding(new Insets(100,20,20,20));
-        infoPane.setStyle("-fx-background-color: #f4f4f4; -fx-border-color: #cccccc;");
+        infoPane.getStyleClass().add("pane");
         infoPane.setPrefWidth(300); // Set a fixed width for the info pane
 
         // Add the symbol pane and labels/buttons to the info pane
         infoPane.getChildren().add(createObjectInfoPane());
         
         StackPane bottomPane = new StackPane();
+        bottomPane.getStyleClass().add("pane");
         bottomPane.setPadding(new Insets(8.5));
         
         // Creating Instruction Box Label
         blankBox = new StackPane();
         blankBox.setPadding(new Insets(8.5));
+        blankBox.getStyleClass().add("pane");
         instructionBox = new StackPane();
+        instructionBox.getStyleClass().add("pane");
         instructionLabel = new Label("");
+        instructionLabel.getStyleClass().add("label");
         instructionBox.getChildren().add(instructionLabel);
-        
+
         // Setting up screen
         root = new BorderPane();
         root.setLeft(menuPane);
@@ -154,12 +172,14 @@ public class MainScreen extends Application{
         root.setRight(infoPane);
         root.setTop(blankBox);
         root.setBottom(bottomPane);
-
-
+        
         Scene scene = new Scene(root, 800, 600);
+        scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
         primaryStage.setOnCloseRequest(event -> handleWindowClose(event));
         primaryStage.setScene(scene);
         primaryStage.show();
+        
+        if(PTMS.getInstance().checkPathFinderUsability()) searchPathButton.setDisable(false); else searchPathButton.setDisable(true);
         remakeStops();
         remakeRoutes();
         updateGraph();
@@ -211,13 +231,19 @@ public class MainScreen extends Application{
         deleteGraphButton.setPrefHeight(menuButtonHeight-50);
         deleteGraphButton.setPrefWidth(menuButtonWidth);
         deleteGraphButton.setOnAction(event -> {
-        	Alert alert = new Alert(AlertType.CONFIRMATION);
+        	alert = new Alert(AlertType.CONFIRMATION);
+        	alert.initStyle(StageStyle.UNDECORATED);
         	alert.setTitle("Eliminar " + PTMS.getInstance().getGraph().getLabel());
-        	alert.setHeaderText("¿Estás seguro de que quieres eliminar " + PTMS.getInstance().getGraph().getLabel() + "?");
+        	alert.setHeaderText("¿Estás seguro de que quieres eliminar \"" + PTMS.getInstance().getGraph().getLabel() + "\"?");
         	alert.setContentText("Esta acción no puede deshacerse");
         	ButtonType yesButton = new ButtonType("Sí");
         	ButtonType noButton = new ButtonType("No");
         	alert.getButtonTypes().setAll(yesButton, noButton);
+        	
+        	DialogPane dialogPane = alert.getDialogPane();
+        	dialogPane.getStylesheets().add(
+        	   getClass().getResource("alert.css").toExternalForm());
+        	dialogPane.getStyleClass().add("dialog-pane");
         	
         	Optional<ButtonType> result = alert.showAndWait();
         	if(result.isPresent() && result.get() == yesButton) {
@@ -235,31 +261,32 @@ public class MainScreen extends Application{
         table = new TableView<>();
         table.setPrefHeight(400); // Set preferred height
         table.setPrefWidth(275);  // Set preferred width
+        table.getStyleClass().add("table-view");
         
      // Create columns
         TableColumn<Stop, String> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         idColumn.setResizable(false);
         idColumn.setReorderable(false);
-        idColumn.setPrefWidth(64);
+        idColumn.setPrefWidth(55);
 
         TableColumn<Stop, String> nameColumn = new TableColumn<>("Nombre");
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("label"));
         nameColumn.setResizable(false);
         nameColumn.setReorderable(false);
-        nameColumn.setPrefWidth(136);
+        nameColumn.setPrefWidth(125);
         
         TableColumn<Stop, Double> xColumn = new TableColumn<>("X");
         xColumn.setCellValueFactory(new PropertyValueFactory<>("x"));
         xColumn.setResizable(false);
         xColumn.setReorderable(false);
-        xColumn.setPrefWidth(40);
+        xColumn.setPrefWidth(45);
         
         TableColumn<Stop, Double> yColumn = new TableColumn<>("Y");
         yColumn.setCellValueFactory(new PropertyValueFactory<>("y"));
         yColumn.setResizable(false);
         yColumn.setReorderable(false);
-        yColumn.setPrefWidth(40);
+        yColumn.setPrefWidth(45);
         
         // Add columns to the table
         table.getColumns().add(idColumn);
@@ -313,6 +340,9 @@ public class MainScreen extends Application{
         searchPathButton.setOnAction(e -> waitForUserAction(3));
 
         menuPane.getChildren().addAll(addNodeButton, searchPathButton);
+
+        menuPane.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+        
         return menuPane;
     }
     
@@ -322,10 +352,11 @@ public class MainScreen extends Application{
     	// Add a BorderPane for the symbol display
         symbolPane = new BorderPane();
         symbolPane.setPrefSize(100, 200);
-        symbolPane.setStyle("-fx-background-color: #e0e0e0; -fx-border-color: #666666;");
+        symbolPane.getStyleClass().add("pane");
         
         // Info Symbol
         nodeSymbol = new Circle(100, 100, 20);
+        nodeSymbol.setStyle("-fx-fill: #a3a8ab;");
         edgeSymbol = new Line(70,50,170,135);
         edgeSymbol.setStrokeWidth(10);
         
@@ -353,13 +384,19 @@ public class MainScreen extends Application{
         actionButton2.setOnAction(e -> new EditStopDialog(this).show());
         actionButton3 = new Button("Eliminar Parada");
         actionButton3.setOnAction(e -> {
-        	Alert alert = new Alert(AlertType.CONFIRMATION);
+        	alert = new Alert(AlertType.CONFIRMATION);
+        	alert.initStyle(StageStyle.UNDECORATED);
         	alert.setTitle("Eliminar " + selectedStop.getLabel());
-        	alert.setHeaderText("¿Estás seguro de que quieres eliminar " + selectedStop.getLabel() + "?");
+        	alert.setHeaderText("¿Estás seguro de que quieres eliminar \"" + selectedStop.getLabel() + "\"?");
         	alert.setContentText("Esta acción no puede deshacerse");
         	ButtonType yesButton = new ButtonType("Sí");
         	ButtonType noButton = new ButtonType("No");
         	alert.getButtonTypes().setAll(yesButton, noButton);
+        	
+        	DialogPane dialogPane = alert.getDialogPane();
+        	dialogPane.getStylesheets().add(
+        	   getClass().getResource("alert.css").toExternalForm());
+        	dialogPane.getStyleClass().add("dialog-pane");
         	
         	Optional<ButtonType> result = alert.showAndWait();
         	if(result.isPresent() && result.get() == yesButton) {
@@ -372,13 +409,19 @@ public class MainScreen extends Application{
         actionButton4.setOnAction(e -> new EditRouteDialog(this).show());
         actionButton5 = new Button("Eliminar Ruta");
         actionButton5.setOnAction(e -> {
-        	Alert alert = new Alert(AlertType.CONFIRMATION);
+        	alert = new Alert(AlertType.CONFIRMATION);
+        	alert.initStyle(StageStyle.UNDECORATED);
         	alert.setTitle("Eliminar " + selectedRoute.getLabel());
-        	alert.setHeaderText("¿Estás seguro de que quieres eliminar " + selectedRoute.getLabel() + "?");
+        	alert.setHeaderText("¿Estás seguro de que quieres eliminar \"" + selectedRoute.getLabel() + "\"?");
         	alert.setContentText("Esta acción no puede deshacerse");
         	ButtonType yesButton = new ButtonType("Sí");
         	ButtonType noButton = new ButtonType("No");
         	alert.getButtonTypes().setAll(yesButton, noButton);
+        	
+        	DialogPane dialogPane = alert.getDialogPane();
+        	dialogPane.getStylesheets().add(
+        	   getClass().getResource("alert.css").toExternalForm());
+        	dialogPane.getStyleClass().add("dialog-pane");
         	
         	Optional<ButtonType> result = alert.showAndWait();
         	if(result.isPresent() && result.get() == yesButton) {
@@ -422,10 +465,19 @@ public class MainScreen extends Application{
         initialStopCombo.setPrefWidth(comboWidth);
         endStopCombo.setPrefWidth(comboWidth);
         
+        VBox pathInfoPane = new VBox();
+        pathInfoPane.setPadding(new Insets(20,10,10,10));
+    	pathInfoPane.setSpacing(4);
+    	pathInfoPane.setAlignment(Pos.TOP_CENTER); 
+    	
     	Label distanceLabel = new Label("Distancia total recorrida:");
     	distanceDetail = new Label("");
         Label timeLabel = new Label("Tiempo total de viaje:");
         timeDetail = new Label("");
+        Label transhipLabel = new Label("Total de transbordos:");
+        transhipDetail = new Label("");
+        
+        pathInfoPane.getChildren().addAll(distanceLabel, distanceDetail, timeLabel, timeDetail, transhipLabel, transhipDetail);
         
         terminalPane = createTerminal();
         
@@ -439,26 +491,47 @@ public class MainScreen extends Application{
         
         //ComboBox place-holders
         algorythmsCombo.setValue(dijkstra);
-        initialStopCombo.setValue(start);
+        if(start == null) initialStopCombo.setValue(PTMS.getInstance().getGraph().getStops().getFirst()); else initialStopCombo.setValue(start);
         endStopCombo.setValue(end);
         
         //Acción del botón
         trailblazeButton.setOnAction(event -> {
-            searchPath(initialStopCombo.getValue(), endStopCombo.getValue(), algorythmsCombo.getValue());
-            waitForUserAction(4);
+        	try {
+        		PTMS.getInstance().checkSameStopPath(initialStopCombo.getValue(), endStopCombo.getValue());
+        		searchPath(initialStopCombo.getValue(), endStopCombo.getValue(), algorythmsCombo.getValue());
+                waitForUserAction(4);
+        	}catch(SameStopException | NullStopException ex) {
+        		alert = new Alert(AlertType.INFORMATION);
+                alert.setTitle("Error");
+                alert.setHeaderText("No se buscó un camino");
+                alert.setContentText(ex.getMessage());
+                
+                DialogPane dialogPane = alert.getDialogPane();
+            	dialogPane.getStylesheets().add(
+            	   getClass().getResource("alert.css").toExternalForm());
+            	dialogPane.getStyleClass().add("dialog-pane");
+                
+                // Show the alert and wait for the user's response
+                alert.showAndWait().ifPresent(response -> {
+                    if (response == ButtonType.OK) {
+                    	
+                    }
+                });
+        	}
         });
         
-        pathFinderPane.getChildren().addAll(titleLabel, algorythmsCombo, initialStopCombo, endStopCombo, distanceLabel, distanceDetail, timeLabel, timeDetail, terminalPane, trailblazeButton);
-        pathFinderPane.setAlignment(Pos.TOP_CENTER);
+        pathFinderPane.getChildren().addAll(titleLabel, algorythmsCombo, initialStopCombo, endStopCombo, pathInfoPane,terminalPane, trailblazeButton);
+        pathFinderPane.setAlignment(Pos.TOP_CENTER); 
         
     	return pathFinderPane;
     }
     
     private Pane createTerminal() {
         // Crear un VBox para contener las líneas de texto
-        textContainer = new VBox(5); // Espaciado de 5 entre líneas
-            Text text = new Text("");
-            textContainer.getChildren().add(text);
+        textContainer = new VBox(5); // Espaciado de 5 entre línea
+        Text text = new Text("");
+        textContainer.getChildren().add(text);
+            
 
         // Envolver el VBox en un ScrollPane
         ScrollPane scrollPane = new ScrollPane(textContainer);
@@ -467,7 +540,7 @@ public class MainScreen extends Application{
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
         // Configurar el tamaño del ScrollPane
-        scrollPane.setPrefSize(240, 300);
+        scrollPane.setPrefSize(260, 300);
 
         // Crear el Pane principal y agregar el ScrollPane
         Pane terminalPane = new Pane(scrollPane);
@@ -547,6 +620,9 @@ public class MainScreen extends Application{
     		instructionLabel.setText("Haz click en cualquier lugar o presiona ESC para continuar");
     		root.setTop(instructionBox);
     		
+    		graphCombo.setDisable(true);
+        	editGraphButton.setDisable(true);
+        	deleteGraphButton.setDisable(true);
     		table.setDisable(true);
         	addNodeButton.setDisable(true);
         	searchPathButton.setDisable(true);
@@ -628,6 +704,7 @@ public class MainScreen extends Application{
             if (node.contains(clickX, clickY)) {
                 selectNode(node);  // Select the clicked node
                 selectedStop = getVisualStop(node);
+                table.getSelectionModel().select(selectedStop);
             }
         }
         
@@ -688,23 +765,31 @@ public class MainScreen extends Application{
     
     private void handleWindowClose(WindowEvent event) {
     	
-    	Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+    	alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Salir");
         alert.setHeaderText("¿Desea guardar antes de salir?");
         alert.setContentText("Los cambios sin guardar se perderán");
-
+        Stage alertStage = (Stage) alert.getDialogPane().getScene().getWindow();
+        alertStage.setOnCloseRequest(e -> {
+        	event.consume();
+        });
+ 
         // Show the alert and wait for user response
         ButtonType yesButton = new ButtonType("Sí");
     	ButtonType noButton = new ButtonType("No");
     	
     	alert.getButtonTypes().setAll(yesButton, noButton);
     	
+    	DialogPane dialogPane = alert.getDialogPane();
+    	dialogPane.getStylesheets().add(
+    	   getClass().getResource("alert.css").toExternalForm());
+    	dialogPane.getStyleClass().add("dialog-pane");
+    	
     	Optional<ButtonType> result = alert.showAndWait();
     	if(result.isPresent() && result.get() == yesButton) {
     		PTMS.getInstance().savePTMS();
     	}
     	if(result.isPresent() && result.get() == noButton) {
-    		
     	}
     };
     
@@ -741,6 +826,7 @@ public class MainScreen extends Application{
         	int[] pathDetails = pathfinder.getPathDetails(path);
         	distanceDetail.setText(""+pathDetails[0]+" km");
             timeDetail.setText(""+pathDetails[1]+" min");
+            transhipDetail.setText(""+pathDetails[2]+" transbordos");
             
             for (String message : pathfinder.getRouteDetails(path)) {
                 Text text = new Text(message);
@@ -776,6 +862,9 @@ public class MainScreen extends Application{
     
     private void resetTrailblaze() {
     	
+    	graphCombo.setDisable(false);
+    	editGraphButton.setDisable(false);
+    	deleteGraphButton.setDisable(false);
     	table.setDisable(false);
     	addNodeButton.setDisable(false);
     	searchPathButton.setDisable(false);
@@ -799,15 +888,15 @@ public class MainScreen extends Application{
     	if(node != null) {
     		// Deselect the previously selected node (if any)
 	        if (selectedNode != null) {
-	            selectedNode.setStyle("-fx-fill: #3498db;");  // Reset to original color
+	        	selectedNode.setStyle("-fx-fill: #007bff;");  // Reset to original color
 	        }
 	        
 	     // Highlight the newly selected node
 	        selectedNode = node;  // Update the selected node reference
-	        selectedNode.setStyle("-fx-fill: #ea5a5a;");  // Change color to red (indicating selection)
+	        selectedNode.setStyle("-fx-fill: #ff4d4d;");  // Change color to red (indicating selection)
 	        
     	}else{
-    		if(selectedNode != null) selectedNode.setStyle("-fx-fill: #3498db;");  // Reset to original color
+    		if(selectedNode != null) selectedNode.setStyle("-fx-fill: #007bff;");  // Reset to original color
     		selectedNode = null;
     	}
     }
@@ -892,7 +981,8 @@ public class MainScreen extends Application{
     
     public void addStop(Stop stop) {
     	Circle node = new Circle(stop.getX(), stop.getY(), circleRadius);
-    	node.setStyle("-fx-fill: #3498db;");
+    	node.getStyleClass().add("stop-circle");
+    	node.setStyle("-fx-fill: #007bff;");
        	PTMS.getInstance().getGraph().addStop(stop);
     	graphNodes.put(stop, node);
     	selectNode(null);
@@ -928,7 +1018,8 @@ public class MainScreen extends Application{
     public void editStop(Stop stop) {
     	graphNodes.remove(stop);
     	Circle node = new Circle(stop.getX(), stop.getY(), circleRadius);
-    	node.setStyle("-fx-fill: #3498db;");
+    	node.getStyleClass().add("stop-circle");
+    	node.setStyle("-fx-fill: #007bff;");
     	PTMS.getInstance().getGraph().modifyStop(stop);
     	graphNodes.put(stop, node);
     	selectNode(null);
@@ -999,7 +1090,8 @@ public class MainScreen extends Application{
     	for(LinkedList<Stop> currentList : PTMS.getInstance().getGraph().getAdjList()) {
     		Stop stop = currentList.get(0);
     		currentStop = new Circle(stop.getX(), stop.getY(), circleRadius);
-    		currentStop.setStyle("-fx-fill: #3498db;");
+    		currentStop.getStyleClass().add("stop-circle");
+    		currentStop.setStyle("-fx-fill: #007bff;");
     		graphNodes.put(stop, currentStop);
     	}
     }
@@ -1020,9 +1112,41 @@ public class MainScreen extends Application{
     	table.refresh();
     	graphPane.getChildren().clear();
     	
+    	 for (int x = 0; x < width; x += gridSize) {
+             Line line = new Line(x, 0, x, height);
+             line.getStyleClass().add("grid-lines");
+             graphPane.getChildren().add(line);
+         }
+
+         for (int y = 0; y < height; y += gridSize) {
+             Line line = new Line(0, y, width, y);
+             line.getStyleClass().add("grid-lines");
+             graphPane.getChildren().add(line);
+         }
+
+         // Add highlighted grid lines every 5 cells
+         for (int x = 0; x < width; x += gridSize * 5) {
+             Line line = new Line(x, 0, x, height);
+             line.getStyleClass().add("highlighted-grid-lines");
+             graphPane.getChildren().add(line);
+         }
+
+         for (int y = 0; y < height; y += gridSize * 5) {
+             Line line = new Line(0, y, width, y);
+             line.getStyleClass().add("highlighted-grid-lines");
+             graphPane.getChildren().add(line);
+         }
+    	
+    	if(PTMS.getInstance().checkPathFinderUsability()) searchPathButton.setDisable(false); else searchPathButton.setDisable(true);
+    	
     	// Adding nodes to the graphPane
     	for(Entry<Stop, Circle> entry : graphNodes.entrySet()) {
-        	graphPane.getChildren().add(entry.getValue());
+    		Label nodeLabel = new Label(entry.getKey().getLabel());
+    		nodeLabel.getStyleClass().add("label");
+    		nodeLabel.setLayoutX(entry.getKey().getX());
+    		nodeLabel.setLayoutY(entry.getKey().getY());
+        	graphPane.getChildren().add(nodeLabel);
+    		graphPane.getChildren().add(entry.getValue());
     	}
     	// Adding edges to the graphPane
     	for(Line l : graphEdges.values()) {

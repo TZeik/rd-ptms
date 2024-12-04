@@ -9,13 +9,16 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import logic.Graph;
 import logic.PTMS;
 
 public class GraphDialog extends Stage{
 	
-	private TextField labelField;
+	static final int buttonWidth = 150;
+	static final int buttonHeight = 28;
 	
+	private TextField labelField;
 	private Button saveButton;
 	private Button cancelButton;
 	
@@ -23,12 +26,19 @@ public class GraphDialog extends Stage{
 		if(update == 0) setTitle("Añadir Mapa");
 		if(update == 1) setTitle("Editar "+ PTMS.getInstance().getGraph().getLabel());
         initModality(Modality.APPLICATION_MODAL);
-  
+        initStyle(StageStyle.UNDECORATED);
+        
         labelField = new TextField("");
+        labelField.getStyleClass().add("text-field");
         if(update == 1) labelField.setText(PTMS.getInstance().getGraph().getLabel());
         if(update == 0) saveButton = new Button("Agregar");
         if(update == 1) saveButton = new Button("Guardar");
         cancelButton = new Button("Cancelar");
+        
+        saveButton.setPrefHeight(buttonHeight);
+        saveButton.setPrefWidth(buttonWidth);
+        cancelButton.setPrefHeight(buttonHeight);
+        cancelButton.setPrefWidth(buttonWidth);
         
         // Set action for the buttons
         saveButton.setOnAction(e -> {
@@ -61,6 +71,7 @@ public class GraphDialog extends Stage{
         mybuttons.getChildren().addAll(saveButton, cancelButton);
 
         Scene scene = new Scene(layout, 300, 120);
+        scene.getStylesheets().add(getClass().getResource("modal.css").toExternalForm());
         setScene(scene);
 	}
 	
