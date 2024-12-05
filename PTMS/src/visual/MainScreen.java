@@ -1752,6 +1752,7 @@ public class MainScreen extends Application{
     	Line currentRoute;
     	for(Route r : PTMS.getInstance().getGraph().getRoutes()) {
     		currentRoute = new Line(r.getSrc().getX(), r.getSrc().getY(), r.getDest().getX(), r.getDest().getY());
+    		currentRoute.getStyleClass().add("edge-line");
     		currentRoute.setStyle("-fx-stroke: #2c3e50; -fx-stroke-width: 6;");
       	    graphEdges.put(r, currentRoute);
     	}
@@ -1803,6 +1804,7 @@ public class MainScreen extends Application{
     	// Adding edges to the graphPane
     	for(Line l : graphEdges.values()) {
    			Polygon arrowhead = createArrowhead(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY());
+   			arrowhead.getStyleClass().add("edge-arrowhead");
    			if(selectedEdge != null && selectedEdge.equals(l)) {
    				l.setStyle("-fx-stroke: #e66161; -fx-stroke-width: 6;");
    				arrowhead.setStyle("-fx-stroke: #e66161; -fx-stroke-width: 6;");

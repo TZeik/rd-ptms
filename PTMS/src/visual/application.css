@@ -196,6 +196,20 @@
     -fx-stroke: #0056b3; /* Darker blue stroke */
     -fx-stroke-width: 2px; /* Stroke width */
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 8, 0.5, 2, 2); /* Optional shadow for 3D effect */
+    -fx-cursor: hand;
+}
+
+.edge-line {
+	-fx-stroke: #2F4F4F; /* Dark Slate Gray color */
+    -fx-stroke-width: 4;  /* Stroke width for the line */
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 5, 0.5, 2, 2);
+    -fx-cursor: hand;
+}
+
+.edge-arrowhead {
+	-fx-fill: #2F4F4F; /* Dark Slate Gray color for the arrowhead */
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 5, 0.5, 2, 2);
+    -fx-cursor: hand;
 }
 
 /* Optional: Add text to the bus stop, such as 'Station' */
