@@ -201,7 +201,7 @@
 
 .edge-line {
 	-fx-stroke: #2F4F4F; /* Dark Slate Gray color */
-    -fx-stroke-width: 4;  /* Stroke width for the line */
+    -fx-stroke-width: 10;  /* Stroke width for the line */
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 5, 0.5, 2, 2);
     -fx-cursor: hand;
 }

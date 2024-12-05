@@ -892,39 +892,48 @@ public class MainScreen extends Application{
     	
         double clickX = event.getX();
         double clickY = event.getY();
+ 
+        selectedStop = null;
+        selectedRoute = null;
+        selectedNode = null;
+        selectedEdge = null;
         
-        Circle lastNode = selectedNode;
-        Line lastRoute = selectedEdge;
+        
         
         for (Circle node : graphNodes.values()) {
             if (node.contains(clickX, clickY)) {
             	selectedStop = getVisualStop(node);
-                selectNode(node);  // Select the clicked node
+                selectedNode = node;  // Select the clicked node
                 table.getSelectionModel().select(selectedStop);
+                if(event.getClickCount() == 2 && selectedStop != null) {
+                	new EditStopDialog(this).show();
+                }
             }
         }
         
-        if((lastNode != null && lastNode.equals(selectedNode)) || selectedNode == null) {
-        	selectNode(null);
+        if(selectedNode == null) {
+        	for(Line edge : graphEdges.values()) {
+            	if(edge.contains(clickX, clickY)) {
+        			selectedRoute = getVisualRoute(edge);
+        			selectedEdge = edge;  // Select the clicked edge
+        			if(event.getClickCount() == 2 && selectedRoute != null) {
+        	        	new EditRouteDialog(this).show();
+        			}
+            	}
+            }
+        }
+
+    	if(selectedNode == null) {
         	selectedStop = null;
         }
-        
-        	
-        
-        for(Line edge : graphEdges.values()) {
-        	if(edge.contains(clickX, clickY)) {
-        		if(selectedStop == null) {
-        			selectEdge(edge);
-        			selectedRoute = getVisualRoute(edge);
-        		}
-        	}
-        }
-        	
-        if((lastRoute != null && lastRoute.equals(selectedEdge)) || selectedEdge == null) {
-        	selectEdge(null);
+    	
+        if(selectedEdge == null) {
         	selectedRoute = null;
         }
         
+        updateGraph();
+
+
         updateInfo();
 
     };
@@ -967,7 +976,7 @@ public class MainScreen extends Application{
     	endUserAction();
     	
     };
-    
+       
     private void searchPath(Stop from, Stop to, String algorythm, String priority) {
     	
     	PathFinder pathfinder = new PathFinder(PTMS.getInstance().getGraph());
@@ -1742,7 +1751,7 @@ public class MainScreen extends Application{
     		Stop stop = currentList.get(0);
     		currentStop = new Circle(stop.getX(), stop.getY(), circleRadius);
     		currentStop.getStyleClass().add("stop-circle");
-    		currentStop.setStyle("-fx-fill: #007bff;");
+    		currentStop.setStyle("-fx-fill: #007bff;"); 		
     		graphNodes.put(stop, currentStop);
     	}
     }
