@@ -20,7 +20,7 @@
     -fx-border-width: 1px;
     -fx-border-radius: 5px;
     -fx-background-radius: 5px;
-    -fx-padding: 10;
+    -fx-padding: 10.5px;
 }
 
 .blankpane {
@@ -264,7 +264,7 @@
 /* Text inside the text container */
 .terminal-text{
     -fx-fill: #FFFFFF; /* White text color */
-    -fx-font-size: 14px; /* Font size */
+    -fx-font-size: 16px; /* Font size */
     -fx-font-family: "Consolas", "Courier New", monospace; /* Monospace font */
     -fx-wrap-text: true; /* Ensure text wraps properly */
 }
@@ -293,4 +293,65 @@
 .text-container ScrollPane .scroll-bar .thumb {
     -fx-background-color: #4A5A64; /* Blue-gray scrollbar thumb */
     -fx-background-radius: 5px; /* Rounded thumb */
+}
+
+/* Custom title bar */
+.hbox {
+    -fx-background-color: #2B3A42; /* Dark blue-gray background */
+    -fx-padding: 5px; /* Padding around the content */
+    -fx-spacing: 5px; /* Space between elements in the title bar */
+}
+
+/* Spacer region (optional, just ensures buttons are aligned to the right) */
+.region {
+    -fx-background-color: transparent; /* Invisible spacer */
+}
+
+/* Buttons in the title bar */
+.button.close.minimize {
+    -fx-background-color: transparent; /* Transparent background for clean look */
+    -fx-text-fill: #FFFFFF; /* White text color */
+    -fx-font-size: 14px; /* Font size for the buttons */
+    -fx-font-family: "Segoe UI", "Arial", sans-serif; /* Clean modern font */
+    -fx-border-width: 0; /* Remove default border */
+    -fx-cursor: hand; /* Change cursor to pointer for interactivity */
+}
+
+/* Hover effect for the buttons */
+.button.close.minimize:hover {
+    -fx-background-color: #3A4A52; /* Slightly lighter blue-gray on hover */
+    -fx-text-fill: #FFD700; /* Golden yellow text on hover for visibility */
+}
+
+/* Pressed effect for the buttons */
+.button.close.minimize:pressed {
+    -fx-background-color: #1C2A33; /* Darker background when pressed */
+    -fx-text-fill: #FFA500; /* Orange text color for active click */
+}
+
+/* Styling for the minimize button */
+.button.minimize {
+    -fx-font-size: 18px; /* Slightly larger for the minimize icon */
+    -fx-font-weight: bold; /* Make it stand out */
+}
+
+/* Styling for the close button */
+.button.close {
+    -fx-font-size: 16px; /* Normal size for the "X" icon */
+    -fx-font-weight: bold; /* Bold for clarity */
+    -fx-text-fill: #FF6F61; /* Red text color for the close button */
+}
+
+.button.close:hover {
+    -fx-background-color: #6A1B1A; /* Reddish background on hover */
+    -fx-text-fill: #FFFFFF; /* White text for better contrast */
+}
+
+/* Main content area */
+.vbox {
+    -fx-background-color: #1C2A33; /* Darker background for the main content */
+    -fx-padding: 10px; /* Add some padding */
+    -fx-border-color: #4A5A64; /* Border to separate the content from the title bar */
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px; /* Rounded corners */
 }

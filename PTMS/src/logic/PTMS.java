@@ -206,5 +206,15 @@ public class PTMS implements Serializable{
 		if(b == null) throw new NullStopException("La parada de destino no existe");
 		if(a.equals(b)) throw new SameStopException("Las paradas no puedes ser iguales");
 	}
+	
+	public void checkDistance(String s) throws NoDistanceException, TooMuchDistanceException{
+		double distance;
+		
+		if(s.isEmpty()) distance = 0;
+		else distance = Double.parseDouble(s);
+		
+		if(distance <= 0) throw new NoDistanceException("La ruta debe de contener una distancia");
+		if(distance > 50000) throw new TooMuchDistanceException("La ruta debe contener una distancia entre 0 y 50000.0");
+	}
 
 }

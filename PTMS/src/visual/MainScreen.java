@@ -35,6 +35,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
@@ -63,13 +65,13 @@ public class MainScreen extends Application{
 	private Pane graphPane;
     private VBox infoPane;
     private StackPane instructionBox;
-    private StackPane blankBox;
     private Label instructionLabel;
     private Pane terminalPane;
     private VBox textContainer;
     private Alert alert;
     private VBox objectInfoPane;
     private VBox pathFinderPane;
+    private HBox titleBar;
     
     ComboBox<Graph> graphCombo;
     
@@ -115,6 +117,10 @@ public class MainScreen extends Application{
     
     VBox infoButtonBox;
     
+    private double xOffset = 0;
+    private double yOffset = 0;
+    
+    
     //Definitions
     static final int gridSize = 20; // Grid cell size
     static final int width = 1320; // Graph Pane width
@@ -140,6 +146,70 @@ public class MainScreen extends Application{
         primaryStage.setMaximized(true);
         primaryStage.setResizable(false);
         
+        primaryStage.initStyle(StageStyle.UNDECORATED);
+
+        // Create a custom title bar
+        titleBar = new HBox();
+        titleBar.getStyleClass().add("hbox");
+
+        // Minimize Button
+        Button minimizeButton = new Button("_");
+        minimizeButton.getStyleClass().add("button minimize");
+        minimizeButton.setOnAction(e -> primaryStage.setIconified(true)); // Minimize the window
+
+        // Exit Button
+        Button closeButton = new Button("X");
+        closeButton.getStyleClass().add("button close");
+        closeButton.setOnAction(e -> {
+        	
+        	alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Salir");
+            alert.initStyle(StageStyle.UNDECORATED);
+            alert.setHeaderText("¿Desea guardar antes de salir?");
+            alert.setContentText("Los cambios sin guardar se perderán");
+           
+            // Show the alert and wait for user response
+            ButtonType yesButton = new ButtonType("Sí");
+        	ButtonType noButton = new ButtonType("No");
+        	ButtonType cancelButton = new ButtonType("Cancelar");
+        	
+        	alert.getButtonTypes().setAll(yesButton, noButton, cancelButton);
+        	
+        	DialogPane dialogPane = alert.getDialogPane();
+        	dialogPane.getStylesheets().add(
+        	   getClass().getResource("alert.css").toExternalForm());
+        	dialogPane.getStyleClass().add("dialog-pane");
+        	
+        	Optional<ButtonType> result = alert.showAndWait();
+        	if(result.isPresent() && result.get() == yesButton) {
+        		PTMS.getInstance().savePTMS();
+        		primaryStage.close();
+        	}
+        	if(result.isPresent() && result.get() == noButton) {
+        		primaryStage.close();
+        	}
+        	
+        	if(result.isPresent() && result.get() == cancelButton) {
+        		alert.close();
+        	}
+        	
+        }); // Close the window
+
+        // Add buttons to the title bar
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS); // Spacer pushes buttons to the right
+        titleBar.getChildren().addAll(spacer, minimizeButton, closeButton);
+
+        // Make the title bar draggable
+        titleBar.setOnMousePressed(event -> {
+            xOffset = event.getSceneX();
+            yOffset = event.getSceneY();
+        });
+
+        titleBar.setOnMouseDragged(event -> {
+            primaryStage.setX(event.getScreenX() - xOffset);
+            primaryStage.setY(event.getScreenY() - yOffset);
+        });
         
         graphNodes = new HashMap<>();
         graphEdges = new HashMap<>();
@@ -170,10 +240,6 @@ public class MainScreen extends Application{
         bottomPane.getStyleClass().add("pane");
         bottomPane.setPadding(new Insets(8.5));
         
-        // Creating Instruction Box Label
-        blankBox = new StackPane();
-        blankBox.getStyleClass().add("blankpane");
-        blankBox.setPrefHeight(20);
         instructionBox = new StackPane();
         instructionBox.getStyleClass().add("infopane");
         instructionLabel = new Label("");
@@ -185,12 +251,11 @@ public class MainScreen extends Application{
         root.setLeft(menuPane);
         root.setCenter(graphPane);
         root.setRight(infoPane);
-        root.setTop(blankBox);
+        root.setTop(titleBar);
         root.setBottom(bottomPane);
         
         Scene scene = new Scene(root, 800, 600);
         scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
-        primaryStage.setOnCloseRequest(event -> handleWindowClose(event));
         primaryStage.setScene(scene);
         primaryStage.show();
         
@@ -566,8 +631,19 @@ public class MainScreen extends Application{
             public void changed(ObservableValue<? extends Stop> observable, Stop oldValue, Stop newValue) {
                 if (newValue != null) { // Ensure a new value is selected
                 	
+                	boolean isDrawed = false;
+                	
                 	if(graphNodes.containsKey(newValue)) {
-                		graphNodes.get(oldValue).setStyle("-fx-fill: #007bff;");
+                		if(graphNodes.get(oldValue).getStyle().contains("-fx-fill: #E99E82;")) graphNodes.get(oldValue).setStyle("-fx-fill: #E99E82;");
+                		else {
+                			for(Entry<Stop, Circle> entry : graphNodes.entrySet()) {
+                				if(entry.getValue().getStyle().contains("-fx-fill: #E99E82;")) isDrawed = true;
+                			}
+                			
+                			if(isDrawed == false) graphNodes.get(oldValue).setStyle("-fx-fill: #E99E82;");
+                			else graphNodes.get(oldValue).setStyle("-fx-fill: #007bff;");
+                		}
+                		
                 		graphNodes.get(newValue).setStyle("-fx-fill: #CBE982;");
                 	}
                 }
@@ -579,8 +655,20 @@ public class MainScreen extends Application{
             @Override
             public void changed(ObservableValue<? extends Stop> observable, Stop oldValue, Stop newValue) {
                 if (newValue != null) { // Ensure a new value is selected
+                	
+                	boolean isDrawed = false;
+                	
                 	if(graphNodes.containsKey(newValue)) {
-                		graphNodes.get(oldValue).setStyle("-fx-fill: #007bff;");
+                		if(graphNodes.get(oldValue).getStyle().contains("-fx-fill: #CBE982;")) graphNodes.get(oldValue).setStyle("-fx-fill: #CBE982;");
+                		else {
+                			for(Entry<Stop, Circle> entry : graphNodes.entrySet()) {
+                				if(entry.getValue().getStyle().contains("-fx-fill: #CBE982;")) isDrawed = true;
+                			}
+                			
+                			if(isDrawed == false) graphNodes.get(oldValue).setStyle("-fx-fill: #CBE982;");
+                			else graphNodes.get(oldValue).setStyle("-fx-fill: #007bff;");
+                		}
+                		
                 		graphNodes.get(newValue).setStyle("-fx-fill: #E99E82;");
                 	}
                 }
@@ -755,7 +843,7 @@ public class MainScreen extends Application{
     
     private void endUserAction() {
     	selectedStop = null;
-    	root.setTop(blankBox);
+    	root.setTop(titleBar);
         graphPane.setCursor(Cursor.DEFAULT);
         graphPane.setOnMouseClicked(this::handleObjectClick);
         enableAll();
@@ -816,10 +904,12 @@ public class MainScreen extends Application{
             }
         }
         
-        if(lastNode != null && lastNode.equals(selectedNode)) {
+        if((lastNode != null && lastNode.equals(selectedNode)) || selectedNode == null) {
         	selectNode(null);
         	selectedStop = null;
         }
+        
+        	
         
         for(Line edge : graphEdges.values()) {
         	if(edge.contains(clickX, clickY)) {
@@ -830,7 +920,7 @@ public class MainScreen extends Application{
         	}
         }
         	
-        if(lastRoute != null && lastRoute.equals(selectedEdge)) {
+        if((lastRoute != null && lastRoute.equals(selectedEdge)) || selectedEdge == null) {
         	selectEdge(null);
         	selectedRoute = null;
         }
@@ -843,6 +933,9 @@ public class MainScreen extends Application{
     	
     	double clickX = event.getX();
         double clickY = event.getY();
+        
+        selectNode(null);
+        selectEdge(null);
         
         Stop lastStop = selectedStop;
         Circle lastNode = selectedNode;
@@ -873,36 +966,6 @@ public class MainScreen extends Application{
         if(endStopCombo.getValue() != null) graphNodes.get(endStopCombo.getValue()).setStyle("-fx-fill: #E99E82;");
     	endUserAction();
     	
-    };
-    
-    private void handleWindowClose(WindowEvent event) {
-    	
-    	alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Salir");
-        alert.setHeaderText("¿Desea guardar antes de salir?");
-        alert.setContentText("Los cambios sin guardar se perderán");
-        Stage alertStage = (Stage) alert.getDialogPane().getScene().getWindow();
-        alertStage.setOnCloseRequest(e -> {
-        	event.consume();
-        });
- 
-        // Show the alert and wait for user response
-        ButtonType yesButton = new ButtonType("Sí");
-    	ButtonType noButton = new ButtonType("No");
-    	
-    	alert.getButtonTypes().setAll(yesButton, noButton);
-    	
-    	DialogPane dialogPane = alert.getDialogPane();
-    	dialogPane.getStylesheets().add(
-    	   getClass().getResource("alert.css").toExternalForm());
-    	dialogPane.getStyleClass().add("dialog-pane");
-    	
-    	Optional<ButtonType> result = alert.showAndWait();
-    	if(result.isPresent() && result.get() == yesButton) {
-    		PTMS.getInstance().savePTMS();
-    	}
-    	if(result.isPresent() && result.get() == noButton) {
-    	}
     };
     
     private void searchPath(Stop from, Stop to, String algorythm, String priority) {
@@ -1449,9 +1512,9 @@ public class MainScreen extends Application{
     	
     	for(Stop s : path) {
     		if(graphNodes.get(s) != null) {
-    			graphNodes.get(s).setStyle("-fx-fill: #f9b040;");
-    			if(s.equals(path.getFirst())) graphNodes.get(s).setStyle("-fx-fill: #CBE982;");
-    			if(s.equals(path.getLast())) graphNodes.get(s).setStyle("-fx-fill: #E99E82;");
+    			graphNodes.get(s).setStyle("-fx-fill: #000000");
+    			if(s.equals(path.getFirst())) graphNodes.get(s).setStyle("-fx-fill: #111111;");
+    			if(s.equals(path.getLast())) graphNodes.get(s).setStyle("-fx-fill: #222222;");
     		}
     	}
     	
@@ -1729,8 +1792,12 @@ public class MainScreen extends Application{
     	
     	// Adding nodes to the graphPane
     	for(Entry<Stop, Circle> entry : graphNodes.entrySet()) {
+    		if(entry.getValue().getStyle().contains("-fx-fill: #000000")) entry.getValue().setStyle("-fx-fill: #FFECA1;"); else
+    		if(entry.getValue().getStyle().contains("-fx-fill: #111111")) entry.getValue().setStyle("-fx-fill: #CBE982;"); else
+    		if(entry.getValue().getStyle().contains("-fx-fill: #222222")) entry.getValue().setStyle("-fx-fill: #E99E82;"); else
     		if(selectedNode != null && selectedNode.equals(entry.getValue())) entry.getValue().setStyle("-fx-fill: #e66161;");
     		else entry.getValue().setStyle("-fx-fill: #007bff;");
+ 
     		graphPane.getChildren().add(entry.getValue());
     	}
     	// Adding edges to the graphPane
@@ -1788,8 +1855,7 @@ public class MainScreen extends Application{
     	for(Entry<String, Route> entry : PTMS.getInstance().getGraph().getRoutesMap().entrySet()) {
     		graphEdges.put(entry.getValue(), new Line(entry.getValue().getSrc().getX(),entry.getValue().getSrc().getY(),entry.getValue().getDest().getX(),entry.getValue().getDest().getY()));
     	}
-    }
-    
+    }    
 
     private void updateCheckBoxes() {
     	if(PTMS.getInstance().getIsStopNames()) showStopNamesCB.setSelected(true); else showStopNamesCB.setSelected(false);

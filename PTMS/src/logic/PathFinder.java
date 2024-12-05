@@ -846,7 +846,7 @@ public class PathFinder {
     		}
     	}
     	
-    	routeDetails.add("Camino más corto encontrado:");
+    	routeDetails.add("Camino encontrado:");
     	String writedPath = "";
     	for (int i = 0; i < path.size(); i++) {
             writedPath += path.get(i).getLabel();

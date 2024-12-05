@@ -71,7 +71,8 @@ public class EditStopDialog extends Stage{
 	            close();
 			} catch (BadNameException | EmptyNameException ex) {
 				Alert info = new Alert(AlertType.INFORMATION);
-                info.setTitle("Error");
+				info.initStyle(StageStyle.UNDECORATED);
+				info.setTitle("Error");
                 info.setHeaderText("No se pudo editar la parada");
                 info.setContentText(ex.getMessage());
                 

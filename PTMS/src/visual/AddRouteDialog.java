@@ -2,7 +2,9 @@ package visual;
 
 import exceptions.BadNameException;
 import exceptions.EmptyNameException;
+import exceptions.NoDistanceException;
 import exceptions.SameStopException;
+import exceptions.TooMuchDistanceException;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -49,6 +51,7 @@ public class AddRouteDialog extends Stage{
         cancelButton.setPrefWidth(buttonWidth);
         
         labelField.setPromptText("Digite un nombre");
+        distanceField.setPromptText("Digite la distancia");
 
         // Add a listener to restrict input to alphanumeric characters and spaces
         labelField.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -72,11 +75,13 @@ public class AddRouteDialog extends Stage{
         addButton.setOnAction(e -> {
         	try {
         		PTMS.getInstance().checkVerifiedName(labelField.getText());
+        		PTMS.getInstance().checkDistance(distanceField.getText());
         		Route route = new Route(PTMS.getInstance().generateRouteID(), Double.parseDouble(distanceField.getText()), start, end, labelField.getText());
         		PTMS.getInstance().checkSameStop(route);
         		app.addRoute(route);
-        	}catch(SameStopException | BadNameException | EmptyNameException ex){
+        	}catch(SameStopException | BadNameException | EmptyNameException | NumberFormatException | NoDistanceException | TooMuchDistanceException ex){
         		Alert info = new Alert(AlertType.INFORMATION);
+        		info.initStyle(StageStyle.UNDECORATED);
                 info.setTitle("Error");
                 info.setHeaderText("No se pudo añadir la ruta");
                 info.setContentText(ex.getMessage());
