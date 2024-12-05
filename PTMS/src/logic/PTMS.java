@@ -7,6 +7,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
+
 import exceptions.*;
 
 public class PTMS implements Serializable{
@@ -21,6 +23,9 @@ public class PTMS implements Serializable{
 	private int graphIdGenerator;
 	private int stopIdGenerator;
 	private int routeIdGenerator;
+    private Boolean isStopNames;
+    private Boolean isEdgeNames;
+    private Boolean isEdgeDistances;
 	
 	public PTMS() {
 		super();
@@ -30,6 +35,9 @@ public class PTMS implements Serializable{
 		this.graphIdGenerator = 2;
 		this.stopIdGenerator = 1;
 		this.routeIdGenerator = 1;
+		this.isStopNames = true;
+		this.isEdgeNames = true;
+		this.isEdgeDistances = true;
 	}
 	
 	public static PTMS getInstance() {
@@ -77,6 +85,30 @@ public class PTMS implements Serializable{
 
 	public void setRouteIdGenerator(int routeIdGenerator) {
 		this.routeIdGenerator = routeIdGenerator;
+	}
+	
+	public Boolean getIsStopNames() {
+		return isStopNames;
+	}
+
+	public void setIsStopNames(Boolean isStopNames) {
+		this.isStopNames = isStopNames;
+	}
+
+	public Boolean getIsEdgeNames() {
+		return isEdgeNames;
+	}
+
+	public void setIsEdgeNames(Boolean isEdgeNames) {
+		this.isEdgeNames = isEdgeNames;
+	}
+
+	public Boolean getIsEdgeDistances() {
+		return isEdgeDistances;
+	}
+
+	public void setIsEdgeDistances(Boolean isEdgeDistances) {
+		this.isEdgeDistances = isEdgeDistances;
 	}
 	
 	// Implementación de guardado de datos, persistencia de los datos del sistema
@@ -174,5 +206,5 @@ public class PTMS implements Serializable{
 		if(b == null) throw new NullStopException("La parada de destino no existe");
 		if(a.equals(b)) throw new SameStopException("Las paradas no puedes ser iguales");
 	}
-	
+
 }

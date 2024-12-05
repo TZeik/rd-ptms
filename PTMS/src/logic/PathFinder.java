@@ -651,7 +651,7 @@ public class PathFinder {
         List<Route> edges = graph.getRoutes();
 
         // Ordenar las aristas por peso
-        edges.sort(Comparator.comparingDouble(Route::getTravelTime));
+        edges.sort(Comparator.comparingInt(Route::getTravelTime));
 
         // Inicializar estructuras para el MST y el conjunto disjunto
         DisjointSet ds = new DisjointSet(nodes);
@@ -681,7 +681,7 @@ public class PathFinder {
         List<Route> edges = graph.getRoutes();
 
         // Ordenar las aristas por peso
-        edges.sort(Comparator.comparingDouble(Route::getTranship));
+        edges.sort(Comparator.comparingInt(Route::getTranship));
 
         // Inicializar estructuras para el MST y el conjunto disjunto
         DisjointSet ds = new DisjointSet(nodes);
@@ -826,7 +826,7 @@ public class PathFinder {
     	List<String> routeDetails = new ArrayList<String>();
     	routeDetails.add("");
     	routeDetails.add("Eventos Ocurrentes (En todas las rutas):");
-    	routeDetails.add("-----------------------------------------------------");
+    	routeDetails.add("");
     	
     	for(Route r : PTMS.getInstance().getGraph().getRoutes()) {
     		if(r.getCurrentEvent().getType().getDescription() != "Normal") {
@@ -834,7 +834,7 @@ public class PathFinder {
         		routeDetails.add("Desde "+r.getSrc().getLabel()+" hasta "+r.getDest().getLabel());
             	routeDetails.add("Se produjo un evento: "+r.getCurrentEvent().getType().getDescription());
             	routeDetails.add("Factor de Retraso: "+r.getCurrentEvent().getType().getFactor());
-            	routeDetails.add("-----------------------------------------------------");
+            	routeDetails.add("");
             	System.out.println("En la ruta "+r.getLabel()+" que va desde "+r.getSrc().getLabel()+" hasta "+r.getDest().getLabel()+" se produjo un/a "+r.getCurrentEvent().getType().getDescription());
             	System.out.println("Factor de Retraso: "+r.getCurrentEvent().getType().getFactor());
     		}else {
@@ -842,7 +842,7 @@ public class PathFinder {
         		routeDetails.add("Desde "+r.getSrc().getLabel()+" hasta "+r.getDest().getLabel());
         		routeDetails.add("No se produjeron eventos");
         		routeDetails.add("Factor de Retraso: "+r.getCurrentEvent().getType().getFactor());
-        		routeDetails.add("-----------------------------------------------------");
+        		routeDetails.add("");
     		}
     	}
     	
@@ -855,8 +855,25 @@ public class PathFinder {
             }
         }
     	routeDetails.add(writedPath);
-    	routeDetails.add("-----------------------------------------------------");
+    	routeDetails.add("");
     	return routeDetails;
     	
     }
+    
+    public List<String> getAlternativePath(List<Stop> path, String algorithm){
+    	List<String> routeDetails = new ArrayList<String>();
+    	
+    	routeDetails.add("Camino Alternativo (utilizando "+ algorithm + ")");
+    	String writedPath = "";
+    	for (int i = 0; i < path.size(); i++) {
+            writedPath += path.get(i).getLabel();
+    		if (i < path.size() - 1) {
+            	writedPath += " -> ";
+            }
+        }
+    	routeDetails.add(writedPath);
+    	routeDetails.add("");
+    	return routeDetails;
+    }
+    
 }

@@ -52,7 +52,7 @@ public class EditRouteDialog extends Stage{
 
         // Add a listener to restrict input to alphanumeric characters and spaces
         labelField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.matches("[a-zA-Z0-9 ]*")) { // Includes spaces
+            if (!newValue.matches("[a-zA-Z0-9 ñÑ]*")) {
                 labelField.setText(oldValue);
             }
         });

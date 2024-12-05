@@ -21,6 +21,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
@@ -40,6 +41,8 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.WindowEvent;
@@ -89,6 +92,12 @@ public class MainScreen extends Application{
     private Button trailblazeButton;
     private Button editGraphButton;
     private Button deleteGraphButton;
+    
+    private CheckBox showStopNamesCB;
+    private CheckBox showEdgeNamesCB;
+    private CheckBox showEdgeDistancesCB;
+    private TextFlow terminalText; 
+    private Text text;
     
     Map<Stop,Circle> graphNodes;
     Map<Route,Line> graphEdges;
@@ -187,11 +196,13 @@ public class MainScreen extends Application{
         
         if(PTMS.getInstance().checkPathFinderUsability()) searchPathButton.setDisable(false); else searchPathButton.setDisable(true);
         
+        updateCheckBoxes();
         remakeStops();
         remakeRoutes();
         updateGraph();
     }
 
+    
     private VBox createMenuPane() {
         VBox menuPane = new VBox();
         menuPane.setPadding(new Insets(100,10,10,10));
@@ -200,7 +211,7 @@ public class MainScreen extends Application{
         
         graphCombo = new ComboBox<>();
         graphCombo.setPrefWidth(comboWidth);
-        graphCombo.getItems().add(new Graph("Añadir","Grafo"));
+        graphCombo.getItems().add(new Graph("Añadir","Mapa"));
         graphCombo.getItems().addAll(PTMS.getInstance().getMaps());
         graphCombo.setValue(PTMS.getInstance().getGraph());
         
@@ -316,6 +327,7 @@ public class MainScreen extends Application{
                     
                     selectedStop = row.getItem();
                     
+                    selectEdge(null);
                     selectNode(graphNodes.get(selectedStop));
                             
                     
@@ -345,9 +357,41 @@ public class MainScreen extends Application{
         searchPathButton.setPrefHeight(menuButtonHeight);
         searchPathButton.setPrefWidth(menuButtonWidth);
         searchPathButton.setOnAction(e -> waitForUserAction(3));
+        
+        showStopNamesCB = new CheckBox("Nombres de Parada");
+        showEdgeNamesCB = new CheckBox("Nombres de Rutas");
+        showEdgeDistancesCB = new CheckBox("Distancias de Rutas");
+        
+        showStopNamesCB.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                PTMS.getInstance().setIsStopNames(true);
+            } else {
+                PTMS.getInstance().setIsStopNames(false);
+            }
+            updateGraph();
+        });
+        
+        showEdgeNamesCB.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                PTMS.getInstance().setIsEdgeNames(true);
+            } else {
+                PTMS.getInstance().setIsEdgeNames(false);
+            }
+            updateGraph();
+        });
+        
+        showEdgeDistancesCB.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                PTMS.getInstance().setIsEdgeDistances(true);
+            } else {
+                PTMS.getInstance().setIsEdgeDistances(false);
+            }
+            updateGraph();
+        });
+        
 
         menuPane.getChildren().addAll(addNodeButton, searchPathButton);
-
+        menuPane.getChildren().addAll(showStopNamesCB, showEdgeNamesCB, showEdgeDistancesCB);
         menuPane.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
         
         return menuPane;
@@ -506,13 +550,50 @@ public class MainScreen extends Application{
         //ComboBox place-holders
         algorythmsCombo.setValue(dijkstra);
         priorityCombo.setValue(shortest);
-        if(start == null) initialStopCombo.setValue(PTMS.getInstance().getGraph().getStops().getFirst()); else initialStopCombo.setValue(start);
+        if(start == null && end == null) {
+        	initialStopCombo.setValue(null);
+        }else if(start == null) {
+        	initialStopCombo.setValue(PTMS.getInstance().getGraph().getStops().getFirst());
+        }else initialStopCombo.setValue(start);
+        	
         endStopCombo.setValue(end);
+        
+        if(initialStopCombo.getValue() != null) graphNodes.get(initialStopCombo.getValue()).setStyle("-fx-fill: #CBE982;");
+        if(endStopCombo.getValue() != null) graphNodes.get(endStopCombo.getValue()).setStyle("-fx-fill: #E99E82;");
+        
+        initialStopCombo.valueProperty().addListener(new ChangeListener<Stop>() {
+            @Override
+            public void changed(ObservableValue<? extends Stop> observable, Stop oldValue, Stop newValue) {
+                if (newValue != null) { // Ensure a new value is selected
+                	
+                	if(graphNodes.containsKey(newValue)) {
+                		graphNodes.get(oldValue).setStyle("-fx-fill: #007bff;");
+                		graphNodes.get(newValue).setStyle("-fx-fill: #CBE982;");
+                	}
+                }
+            }
+            
+        });
+        
+        endStopCombo.valueProperty().addListener(new ChangeListener<Stop>() {
+            @Override
+            public void changed(ObservableValue<? extends Stop> observable, Stop oldValue, Stop newValue) {
+                if (newValue != null) { // Ensure a new value is selected
+                	if(graphNodes.containsKey(newValue)) {
+                		graphNodes.get(oldValue).setStyle("-fx-fill: #007bff;");
+                		graphNodes.get(newValue).setStyle("-fx-fill: #E99E82;");
+                	}
+                }
+            }
+            
+        });
         
         //Acción del botón
         trailblazeButton.setOnAction(event -> {
         	try {
         		PTMS.getInstance().checkSameStopPath(initialStopCombo.getValue(), endStopCombo.getValue());
+        		selectedNode = null;
+        		selectedEdge = null;
         		searchPath(initialStopCombo.getValue(), endStopCombo.getValue(), algorythmsCombo.getValue(), priorityCombo.getValue());
                 waitForUserAction(4);
         	}catch(SameStopException | NullStopException ex) {
@@ -542,23 +623,33 @@ public class MainScreen extends Application{
     }
     
     private Pane createTerminal() {
-        // Crear un VBox para contener las líneas de texto
-        textContainer = new VBox(5); // Espaciado de 5 entre línea
-        Text text = new Text("");
-        textContainer.getChildren().add(text);
-            
+    	// Create a VBox for containing the text lines
+        textContainer = new VBox(5); // Spacing of 5 between lines
+        textContainer.setPrefWidth(250);
+        textContainer.getStyleClass().add("text-container-borderless");
+        
+        terminalText = new TextFlow();
+        terminalText.setTextAlignment(TextAlignment.JUSTIFY);
+        
+        // Example of wrapped text
+        text = new Text("Los detalles del camino se especificarán aquí");
+        text.getStyleClass().add("terminal-text");
+        addTextLine(terminalText, text);
+        textContainer.getChildren().add(terminalText);
 
-        // Envolver el VBox en un ScrollPane
+        // Wrap the VBox in a ScrollPane
         ScrollPane scrollPane = new ScrollPane(textContainer);
-        scrollPane.setFitToWidth(true); // Asegurar que el ancho coincida con el contenedor
-        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setFitToWidth(true); // Ensure the ScrollPane fits to the width of the content
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS); // Allow vertical scrolling
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER); // Disable horizontal scrolling
+        scrollPane.getStyleClass().add("text-container");
 
-        // Configurar el tamaño del ScrollPane
-        scrollPane.setPrefSize(260, 300);
+        // Configure the size of the ScrollPane to prevent width growth
+        scrollPane.setPrefSize(260, 300); // Fixed width and height for the terminal window
 
-        // Crear el Pane principal y agregar el ScrollPane
+        // Create the main Pane and add the ScrollPane
         Pane terminalPane = new Pane(scrollPane);
+        terminalPane.getStyleClass().add("text-container");
         scrollPane.setLayoutX(0);
         scrollPane.setLayoutY(0);
 
@@ -651,6 +742,8 @@ public class MainScreen extends Application{
                 if (event.getCode() == KeyCode.ESCAPE) {
                 	resetTrailblaze();
                 	selectNode(null);
+                	if(initialStopCombo.getValue() != null) graphNodes.get(initialStopCombo.getValue()).setStyle("-fx-fill: #CBE982;");
+                    if(endStopCombo.getValue() != null) graphNodes.get(endStopCombo.getValue()).setStyle("-fx-fill: #E99E82;");
                 	endUserAction();
                 }
             });
@@ -717,8 +810,8 @@ public class MainScreen extends Application{
         
         for (Circle node : graphNodes.values()) {
             if (node.contains(clickX, clickY)) {
+            	selectedStop = getVisualStop(node);
                 selectNode(node);  // Select the clicked node
-                selectedStop = getVisualStop(node);
                 table.getSelectionModel().select(selectedStop);
             }
         }
@@ -750,14 +843,14 @@ public class MainScreen extends Application{
     	
     	double clickX = event.getX();
         double clickY = event.getY();
-        Stop lastStop = selectedStop;
         
+        Stop lastStop = selectedStop;
         Circle lastNode = selectedNode;
         
         for (Circle node : graphNodes.values()) {
             if (node.contains(clickX, clickY)) {
-                selectNode(node);  // Select the clicked node
                 selectedStop = getVisualStop(node);
+                selectNode(node);  // Select the clicked node
             }
         }
         if((lastNode != null && lastNode.equals(selectedNode)) || (lastNode == null && selectedNode == null)) {
@@ -776,7 +869,10 @@ public class MainScreen extends Application{
     private void handleSearchedPath(MouseEvent event) {
     	resetTrailblaze();
     	selectNode(null);
+    	if(initialStopCombo.getValue() != null) graphNodes.get(initialStopCombo.getValue()).setStyle("-fx-fill: #CBE982;");
+        if(endStopCombo.getValue() != null) graphNodes.get(endStopCombo.getValue()).setStyle("-fx-fill: #E99E82;");
     	endUserAction();
+    	
     };
     
     private void handleWindowClose(WindowEvent event) {
@@ -885,34 +981,477 @@ public class MainScreen extends Application{
     		break;
     	}
     	
-        textContainer.getChildren().clear();
+        terminalText.getChildren().clear();
 		pathfinder.printPath(path);
         
+		List<Stop> searched = path;
+		
     	if(path.isEmpty()) {
-    		Text text = new Text("No se encontró un camino");
-    		textContainer.getChildren().add(text);
+    		text = new Text("No se encontró un camino");
+    		addTextLine(terminalText, text);
     	}else {
         	int[] pathDetails = pathfinder.getPathDetails(path);
         	distanceDetail.setText(""+pathDetails[0]+" km");
             timeDetail.setText(""+pathDetails[1]+" min");
             transhipDetail.setText(""+pathDetails[2]+" transbordos");
             
-            for (String message : pathfinder.getRouteDetails(path)) {
-                Text text = new Text(message);
-                textContainer.getChildren().add(text);
-            }
-
         	trailblaze(path);
+        	
+            // Escribir por terminal las rutas alternativas
+        	
+        	
+            switch(algorythm) {
+        	case dijkstra:
+        		switch(priority) {
+        		case shortest:
+        			path = pathfinder.bellmanFord_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, bellmanford)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			path = pathfinder.floydWarshall_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, warshall)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.kruskalMST_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, kruskal)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			break;
+        		case fastest:
+        			path = pathfinder.bellmanFord_fastest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, bellmanford)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.floydWarshall_fastest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, warshall)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.kruskalMST_fastest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, kruskal)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			break;
+        		case transferless:
+        			path = pathfinder.bellmanFord_transferless(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, bellmanford)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.floydWarshall_transferless(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, warshall)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.kruskalMST_transferless(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, kruskal)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			break;
+        		default:
+        			path = pathfinder.bellmanFord_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, bellmanford)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.floydWarshall_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, warshall)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.kruskalMST_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, kruskal)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			break;
+        		}
+        		break;
+        	case bellmanford:
+        		switch(priority) {
+        		case shortest:
+        			path = pathfinder.dijkstra_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, dijkstra)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.floydWarshall_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, warshall)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.kruskalMST_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, kruskal)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			break;
+        		case fastest:
+        			path = pathfinder.dijkstra_fastest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, dijkstra)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.floydWarshall_fastest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, warshall)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.kruskalMST_fastest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, kruskal)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			break;
+        		case transferless:
+        			path = pathfinder.dijkstra_transferless(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, dijkstra)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.floydWarshall_transferless(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, warshall)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.kruskalMST_transferless(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, kruskal)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			break;
+        		default:
+        			path = pathfinder.dijkstra_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, dijkstra)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.floydWarshall_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, warshall)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.kruskalMST_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, kruskal)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			break;
+        		}
+        		
+        		break;
+        	case warshall:
+        		switch(priority) {
+        		case shortest:
+        			path = pathfinder.dijkstra_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, dijkstra)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.bellmanFord_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, bellmanford)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.kruskalMST_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, kruskal)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			break;
+        		case fastest:
+        			path = pathfinder.dijkstra_fastest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, dijkstra)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.bellmanFord_fastest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, bellmanford)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.kruskalMST_fastest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, kruskal)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			break;
+        		case transferless:
+        			path = pathfinder.dijkstra_transferless(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, dijkstra)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.bellmanFord_transferless(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, bellmanford)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.kruskalMST_transferless(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, kruskal)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			break;
+        		default:
+        			path = pathfinder.dijkstra_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, dijkstra)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.bellmanFord_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, bellmanford)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.kruskalMST_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, kruskal)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			break;
+        		}
+        		break;
+        	case kruskal:
+        		switch(priority) {
+        		case shortest:
+        			path = pathfinder.dijkstra_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, dijkstra)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.bellmanFord_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, bellmanford)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.floydWarshall_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, warshall)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			break;
+        		case fastest:
+        			path = pathfinder.dijkstra_fastest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, dijkstra)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.bellmanFord_fastest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, bellmanford)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.floydWarshall_fastest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, warshall)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			break;
+        		case transferless:
+        			path = pathfinder.dijkstra_transferless(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, dijkstra)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.bellmanFord_transferless(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, bellmanford)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.floydWarshall_transferless(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, warshall)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			break;
+        		default:
+        			path = pathfinder.dijkstra_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, dijkstra)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.bellmanFord_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, bellmanford)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			path = pathfinder.floydWarshall_shortest(from, to);
+        			if(checkSamePaths(path, searched) == false) {
+        				for (String message : pathfinder.getAlternativePath(path, warshall)) {
+                            text = new Text(message);
+                            addTextLine(terminalText, text);
+                        }
+        			}
+        			
+        			break;
+        		}	
+        		break;
+        	default:
+        		path = pathfinder.dijkstra_shortest(from, to);
+        		break;
+        	}
+            
+            for (String message : pathfinder.getRouteDetails(searched)) {
+                text = new Text(message);
+                addTextLine(terminalText, text);
+            }
     	}
     }
-    
+
     private void trailblaze(List<Stop> path) {
     	
     	for(Stop s : path) {
     		if(graphNodes.get(s) != null) {
     			graphNodes.get(s).setStyle("-fx-fill: #f9b040;");
-    			if(s.equals(path.getFirst())) graphNodes.get(s).setStyle("-fx-fill: #fec88e;");
-    			if(s.equals(path.getLast())) graphNodes.get(s).setStyle("-fx-fill: #fc6355;");
+    			if(s.equals(path.getFirst())) graphNodes.get(s).setStyle("-fx-fill: #CBE982;");
+    			if(s.equals(path.getLast())) graphNodes.get(s).setStyle("-fx-fill: #E99E82;");
     		}
     	}
     	
@@ -946,20 +1485,8 @@ public class MainScreen extends Application{
     }
     
     private void selectNode(Circle node) {
-    	if(node != null) {
-    		// Deselect the previously selected node (if any)
-	        if (selectedNode != null) {
-	        	selectedNode.setStyle("-fx-fill: #007bff;");  // Reset to original color
-	        }
-	        
-	     // Highlight the newly selected node
-	        selectedNode = node;  // Update the selected node reference
-	        selectedNode.setStyle("-fx-fill: #ff4d4d;");  // Change color to red (indicating selection)
-	        
-    	}else{
-    		if(selectedNode != null) selectedNode.setStyle("-fx-fill: #007bff;");  // Reset to original color
-    		selectedNode = null;
-    	}
+    	if(node != null) selectedNode = node; else selectedNode = null;
+    	updateGraph();
     }
     
     private void selectEdge(Line edge) {
@@ -1029,7 +1556,7 @@ public class MainScreen extends Application{
     	PTMS.getInstance().setGraph(graph);
     	graphCombo.setValue(null);
     	graphCombo.getItems().clear();
-    	graphCombo.getItems().add(new Graph("Añadir","Grafo"));
+    	graphCombo.getItems().add(new Graph("Añadir","Mapa"));
         graphCombo.getItems().addAll(PTMS.getInstance().getMaps());
         graphCombo.setValue(PTMS.getInstance().getGraph());
     	selectNode(null);
@@ -1065,7 +1592,7 @@ public class MainScreen extends Application{
     	PTMS.getInstance().editGraph(graph);
     	graphCombo.setValue(null);
     	graphCombo.getItems().clear();
-    	graphCombo.getItems().add(new Graph("Añadir","Grafo"));
+    	graphCombo.getItems().add(new Graph("Añadir","Mapa"));
         graphCombo.getItems().addAll(PTMS.getInstance().getMaps());
         graphCombo.setValue(PTMS.getInstance().getGraph());
     	selectNode(null);
@@ -1102,7 +1629,7 @@ public class MainScreen extends Application{
     		PTMS.getInstance().setGraph(newGraph);
     		graphCombo.setValue(null);
         	graphCombo.getItems().clear();
-        	graphCombo.getItems().add(new Graph("Añadir","Grafo"));
+        	graphCombo.getItems().add(new Graph("Añadir","Mapa"));
             graphCombo.getItems().addAll(PTMS.getInstance().getMaps());
             graphCombo.setValue(PTMS.getInstance().getGraph());
             selectNode(null);
@@ -1115,7 +1642,7 @@ public class MainScreen extends Application{
     		PTMS.getInstance().setGraph(PTMS.getInstance().getMaps().getFirst());
     		graphCombo.setValue(null);
         	graphCombo.getItems().clear();
-        	graphCombo.getItems().add(new Graph("Añadir","Grafo"));
+        	graphCombo.getItems().add(new Graph("Añadir","Mapa"));
             graphCombo.getItems().addAll(PTMS.getInstance().getMaps());
             graphCombo.setValue(PTMS.getInstance().getGraph());
             selectNode(null);
@@ -1202,6 +1729,8 @@ public class MainScreen extends Application{
     	
     	// Adding nodes to the graphPane
     	for(Entry<Stop, Circle> entry : graphNodes.entrySet()) {
+    		if(selectedNode != null && selectedNode.equals(entry.getValue())) entry.getValue().setStyle("-fx-fill: #e66161;");
+    		else entry.getValue().setStyle("-fx-fill: #007bff;");
     		graphPane.getChildren().add(entry.getValue());
     	}
     	// Adding edges to the graphPane
@@ -1224,13 +1753,34 @@ public class MainScreen extends Application{
     		graphPane.getChildren().addAll(l, arrowhead);
    		}
     	
-    	for(Entry<Stop, Circle> entry : graphNodes.entrySet()) {
-    		Label nodeLabel = new Label(entry.getKey().getLabel());
-    		nodeLabel.getStyleClass().add("nodelabel");
-    		nodeLabel.setLayoutX(entry.getValue().getCenterX());
-    		nodeLabel.setLayoutY(entry.getValue().getCenterY()+20);
-           	graphPane.getChildren().add(nodeLabel);
-    	}
+    	if(PTMS.getInstance().getIsStopNames()) {
+    		for(Entry<Stop, Circle> entry : graphNodes.entrySet()) {
+        		Label nodeLabel = new Label(entry.getKey().getLabel());
+        		nodeLabel.getStyleClass().add("nodelabel");
+        		nodeLabel.setLayoutX(entry.getValue().getCenterX() );
+        		nodeLabel.setLayoutY(entry.getValue().getCenterY()+20);
+               	graphPane.getChildren().add(nodeLabel);
+        	}
+		} 	
+    	
+    	if(PTMS.getInstance().getIsEdgeNames() || PTMS.getInstance().getIsEdgeDistances()) {
+    		for(Entry<Route, Line> entry : graphEdges.entrySet()) {
+        		if(PTMS.getInstance().getIsEdgeNames()) {
+        			Label edgeLabel = new Label(entry.getKey().getLabel());
+        			edgeLabel.getStyleClass().add("edgelabel");
+        			edgeLabel.setLayoutX((entry.getValue().getStartX()+entry.getValue().getEndX())/2);
+            		edgeLabel.setLayoutY(((entry.getValue().getStartY()+entry.getValue().getEndY())/2)-15);
+            		graphPane.getChildren().add(edgeLabel);
+        		}
+        		if(PTMS.getInstance().getIsEdgeDistances()) {
+        			Label edgeDistance = new Label(String.valueOf(entry.getKey().getDistance()));
+            		edgeDistance.getStyleClass().add("edgelabel");
+            		edgeDistance.setLayoutX((entry.getValue().getStartX()+entry.getValue().getEndX())/2);
+            		edgeDistance.setLayoutY(((entry.getValue().getStartY()+entry.getValue().getEndY())/2)+5);
+                   	graphPane.getChildren().add(edgeDistance);
+        		}
+        	}
+    	}    	
     }
 
     private void updateEdges() {
@@ -1238,6 +1788,13 @@ public class MainScreen extends Application{
     	for(Entry<String, Route> entry : PTMS.getInstance().getGraph().getRoutesMap().entrySet()) {
     		graphEdges.put(entry.getValue(), new Line(entry.getValue().getSrc().getX(),entry.getValue().getSrc().getY(),entry.getValue().getDest().getX(),entry.getValue().getDest().getY()));
     	}
+    }
+    
+
+    private void updateCheckBoxes() {
+    	if(PTMS.getInstance().getIsStopNames()) showStopNamesCB.setSelected(true); else showStopNamesCB.setSelected(false);
+    	if(PTMS.getInstance().getIsEdgeNames()) showEdgeNamesCB.setSelected(true); else showEdgeNamesCB.setSelected(false);
+    	if(PTMS.getInstance().getIsEdgeDistances()) showEdgeDistancesCB.setSelected(true); else showEdgeDistancesCB.setSelected(false);
     }
     
     private Stop getVisualStop(Circle visual) {
@@ -1304,6 +1861,9 @@ public class MainScreen extends Application{
 		actionButton3.setDisable(false);
 		actionButton4.setDisable(false);
 		actionButton5.setDisable(false);
+		showStopNamesCB.setDisable(false);
+		showEdgeNamesCB.setDisable(false);
+		showEdgeDistancesCB.setDisable(false);
     }
     
     private void disableAll() {
@@ -1323,5 +1883,30 @@ public class MainScreen extends Application{
 		actionButton3.setDisable(true);
 		actionButton4.setDisable(true);
 		actionButton5.setDisable(true);
+		showStopNamesCB.setDisable(true);
+		showEdgeNamesCB.setDisable(true);
+		showEdgeDistancesCB.setDisable(true);
     }
+
+    private void addTextLine(TextFlow textFlow, Text text) {
+        text.setWrappingWidth(200); // Ensure wrapping at the same width
+        text.getStyleClass().add("terminal-text"); // Add custom CSS for styling
+        textFlow.getChildren().add(text); // Add the text node to the TextFlow
+        Text lineBreak = new Text("\n");
+        lineBreak.getStyleClass().add("terminal-text");
+        // You can also add a LineBreak explicitly if needed
+        textFlow.getChildren().add(lineBreak); // Add line break (simulating a new line)
+    }
+
+	public boolean checkSamePaths(List<Stop> a, List<Stop> b) {
+		
+		boolean isSame = true;
+		
+		for(Stop s : a) {
+			if(b.contains(s)) continue; else isSame = false;
+		}
+		
+		return isSame;
+	}
+    
 }

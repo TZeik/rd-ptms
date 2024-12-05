@@ -49,8 +49,13 @@
 }
 
 .nodelabel{
-    -fx-text-fill: #FFFFFF; /* Light gray text */
+    -fx-text-fill: #FFFFFF; /* Light text */
     -fx-font-size: 20.0px;
+}
+
+.edgelabel{
+    -fx-text-fill: #989898; /* Light gray text */
+    -fx-font-size: 12.0px;
 }
 
 .text-field {
@@ -202,4 +207,90 @@
     -fx-background-color: rgba(0, 0, 0, 0.6); /* Dark background behind text for visibility */
     -fx-padding: 4px;
     -fx-background-radius: 5px;
+}
+
+/* Styling the CheckBox */
+.check-box {
+    -fx-font-size: 14px; /* Font size of the CheckBox text */
+    -fx-text-fill: #FFFFFF; /* White text color */
+    -fx-padding: 5px; /* Padding around the CheckBox */
+}
+
+/* Styling the CheckBox box itself */
+.check-box .box {
+    -fx-border-color: #4A5A64; /* Dark blue-gray border */
+    -fx-border-width: 2px; /* Border thickness */
+    -fx-background-color: #2B3A42; /* Dark blue background */
+    -fx-border-radius: 3px; /* Rounded corners for the box */
+    -fx-pref-width: 15px; /* Width of the box */
+    -fx-pref-height: 15px; /* Height of the box */
+}
+
+/* Styling for when the CheckBox is selected */
+.check-box:selected .box {
+    -fx-background-color: #007bff; /* Bright blue when selected */
+    -fx-border-color: #0056b3; /* Slightly darker blue for border */
+}
+
+/* Hover effect for the CheckBox */
+.check-box:hover .box {
+    -fx-background-color: #4A5A64; /* Lighter blue-gray on hover */
+    -fx-border-color: #007bff; /* Brighter border color on hover */
+}
+
+/* Focused CheckBox styling (when tabbed to) */
+.check-box:focused .box {
+    -fx-effect: dropshadow(gaussian, #007bff, 5, 0.5, 0, 0); /* Blue glow */
+    -fx-border-color: #007bff; /* Brighter border to indicate focus */
+}
+
+/* General Text Container Styling */
+.text-container {
+    -fx-background-color: #2B3A42; /* Dark blue-gray background */
+    -fx-border-color: #4A5A64; /* Subtle border for visibility */
+    -fx-border-width: 1.5px; /* Thin border for framing */
+    -fx-border-radius: 5px; /* Rounded corners */
+    -fx-padding: 10px; /* Padding around the content */
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 5, 0.5, 2, 2); /* Subtle shadow */
+}
+
+.text-container-borderless {
+    -fx-background-color: #2B3A42; /* Dark blue-gray background */
+    -fx-border-width: 0px; /* Thin border for framing */
+    -fx-border-radius: 5px; /* Rounded corners */
+    -fx-padding: 10px; /* Padding around the content */
+}
+
+/* Text inside the text container */
+.terminal-text{
+    -fx-fill: #FFFFFF; /* White text color */
+    -fx-font-size: 14px; /* Font size */
+    -fx-font-family: "Consolas", "Courier New", monospace; /* Monospace font */
+    -fx-wrap-text: true; /* Ensure text wraps properly */
+}
+
+
+/* ScrollPane styling */
+.text-container ScrollPane {
+    -fx-background: transparent; /* Transparent background to avoid mismatched colors */
+    -fx-background-color: transparent; /* Transparent content area */
+    -fx-border-color: #4A5A64; /* Border around the ScrollPane */
+    -fx-border-width: 2px;
+    -fx-border-radius: 5px;
+}
+
+.text-container ScrollPane .viewport {
+    -fx-background-color: #2B3A42; /* Match the terminal background */
+    -fx-padding: 5px; /* Padding for the viewport content */
+    -fx-border-width: 0px;
+}
+
+/* ScrollBar styling */
+.text-container ScrollPane .scroll-bar {
+    -fx-background-color: #1E272E; /* Dark blue background for the scrollbar track */
+}
+
+.text-container ScrollPane .scroll-bar .thumb {
+    -fx-background-color: #4A5A64; /* Blue-gray scrollbar thumb */
+    -fx-background-radius: 5px; /* Rounded thumb */
 }
