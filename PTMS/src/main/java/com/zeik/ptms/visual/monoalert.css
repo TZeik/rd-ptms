@@ -1,0 +1,62 @@
+/* Customization for the overall dialog pane */
+.dialog-pane {
+    -fx-background-color: #2E3B47; /* Dark blue background */
+    -fx-border-color: #4A5A64; /* Lighter border color */
+    -fx-border-width: 2.0px;
+    -fx-border-radius: 5px; /* Optional: add rounded corners */
+    -fx-padding: 5px;
+    -fx-alignment: center;
+}
+
+/* Customization of DialogPane Content */
+.dialog-pane > .content.label {
+    -fx-padding: 0.5em 0.5em 0.5em 0.5em;
+    -fx-alignment: center;
+    -fx-background-color: #3A4A5A; /* Darker background for content */
+    -fx-text-fill: #D1D9E2; /* Light gray text */
+    -fx-font-size: 12.0px;
+}
+
+/* Customization of DialogPane Header */
+.dialog-pane:header .header-panel {
+    -fx-background-color: #2E3B47; /* Dark blue background for the header */
+}
+
+.dialog-pane:header .header-panel .label {
+    -fx-background-color: #4A5A64; /* Slightly lighter background for header text */
+    -fx-background-radius: 10px;
+    -fx-alignment: center;
+    -fx-text-fill: #FFFFFF; /* White text for the header */
+    -fx-font-size: 12.0px;
+    -fx-font-weight: bold; /* Make header text bold */
+}
+
+/* Customization for Buttons */
+.dialog-pane .button {
+    -fx-background-color: #4A5A64; /* Dark blue buttons */
+    -fx-text-fill: #FFFFFF; /* White text */
+    -fx-wrap-text: true;
+    -fx-cursor: hand; /* Pointer cursor for buttons */
+    -fx-padding: 8px 8px; /* Add some padding to the buttons */
+    -fx-pref-width: 175px;
+}
+
+/* Button Hover Effect 
+ * */
+.dialog-pane .button:hover {
+    -fx-background-color: #3C4A56; /* Slightly lighter dark blue on hover */
+    -fx-text-fill: #2E3B47; /* Dark text on button when hovered */
+    -fx-font-weight: bold; /* Bold text on hover */
+}
+
+/* Customization for the Dialog Icon (if any) */
+.dialog-pane .icon {
+    -fx-fill: #FFD700; /* Gold color for the icon */
+}
+
+/* Customization for the bar where the buttons are located */
+.button-bar {
+  	-fx-background-color: #2E3B47; /* Dark background to match the pane */
+  	-fx-alignment: center;
+	-fx-padding: 0 84px 0 0;
+}

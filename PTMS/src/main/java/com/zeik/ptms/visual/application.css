@@ -1,0 +1,371 @@
+/* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
+.root {
+    -fx-background-color: #1E1E2E; /* Dark blue background */
+    -fx-text-fill: #FFFFFF; /* White text */
+    -fx-font-family: 'Segoe UI', sans-serif;
+}
+
+.pane {
+    -fx-background-color: #2A2A3C; /* Slightly lighter blue for pane backgrounds */
+    -fx-border-color: #3B3B4F; /* Subtle border for panes */
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 10;
+}
+
+.infopane {
+    -fx-background-color: #4F4F6E; /* Slightly lighter blue for pane backgrounds */
+    -fx-border-color: #3B3B4F; /* Subtle border for panes */
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 10.5px;
+}
+
+.blankpane {
+    -fx-background-color: #2A2A3C; /* Slightly lighter blue for pane backgrounds */
+    -fx-border-color: #3B3B4F; /* Subtle border for panes */
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 17.5;
+}
+
+.button {
+    -fx-background-color: #3B3B4F; /* Dark button */
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: transparent;
+    -fx-background-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #4E4E65; /* Slightly lighter on hover */
+}
+
+.label {
+    -fx-text-fill: #A6A6D9; /* Softer text for labels */
+}
+
+.nodelabel{
+    -fx-text-fill: #FFFFFF; /* Light text */
+    -fx-font-size: 20.0px;
+}
+
+.edgelabel{
+    -fx-text-fill: #989898; /* Light gray text */
+    -fx-font-size: 12.0px;
+}
+
+.text-field {
+    -fx-background-color: #2A2A3C;
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: #3B3B4F;
+    -fx-border-radius: 3px;
+    -fx-padding: 5;
+    -fx-prompt-text-fill: gray;
+}
+
+.diagram-pane {
+    -fx-background-color: #1E1E2E; /* Dark blue background */
+    -fx-border-color: #3B3B4F; /* Subtle border */
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+}
+
+.grid-lines {
+    -fx-stroke: #2A2A3C; /* Grid line color */
+    -fx-stroke-width: 0.5; /* Thin lines for grid */
+}
+
+.highlighted-grid-lines {
+    -fx-stroke: #3B3B4F; /* Slightly brighter for highlighted grid lines */
+    -fx-stroke-width: 1; /* Thicker for emphasis */
+}
+
+.diagram-element {
+    -fx-fill: #A6A6D9; /* Default color for diagram elements */
+    -fx-stroke: #FFFFFF; /* Outline for visibility */
+    -fx-stroke-width: 1;
+}
+
+.diagram-element:hover {
+    -fx-fill: #D1D1E0; /* Lighter fill on hover */
+    -fx-stroke: #FFD700; /* Gold outline for hover effect */
+}
+
+.table-view {
+    -fx-background-color: #1E1E2E; /* Dark blue background */
+    -fx-border-color: #3B3B4F; /* Subtle border for the table */
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 5;
+}
+
+.table-view .column-header {
+    -fx-background-color: #2A2A3C; /* Header background */
+    -fx-text-fill: #A6A6D9; /* Softer text for headers */
+    -fx-font-weight: bold; /* Bold text for headers */
+    -fx-border-color: #3B3B4F; /* Border between header cells */
+    -fx-border-width: 0 0 1px 0;
+}
+
+.table-view .column-header:hover {
+    -fx-background-color: #3B3B4F; /* Slightly brighter on hover */
+}
+
+.table-view .table-row-cell {
+    -fx-background-color: #1E1E2E; /* Row background */
+    -fx-border-color: transparent; /* No visible border */
+}
+
+.table-view .table-row-cell:selected {
+    -fx-background-color: #3B3B4F; /* Highlight selected row */
+    -fx-text-fill: #FFD700; /* Gold text for selected row */
+}
+
+.table-view .table-row-cell:hover {
+    -fx-background-color: #2A2A3C; /* Highlight hovered row */
+}
+
+.table-view .table-cell {
+    -fx-text-fill: #FFFFFF; /* Ensure cell text is white */
+    -fx-border-color: #3B3B4F; /* Subtle border between cells */
+    -fx-padding: 5;
+}
+
+/* Style the ComboBox */
+.combo-box {
+    -fx-background-color: #2A2A3C; /* Dark background for ComboBox */
+    -fx-border-color: #3B3B4F; /* Subtle border */
+    -fx-border-radius: 5px;
+    -fx-padding: 5px;
+    -fx-text-fill: #FFFFFF; /* Text color */
+    -fx-font-size: 14px;
+}
+
+/* Style the arrow button of ComboBox */
+.combo-box .arrow {
+    -fx-background-color: #3B3B4F; /* Dark button background */
+    -fx-background-radius: 5px;
+    -fx-text-fill: #FFFFFF; /* Arrow button text color */
+}
+
+/* Style ComboBox drop-down list */
+.combo-box .list-cell {
+    -fx-background-color: #1E1E2E; /* Dark background for list items */
+    -fx-text-fill: #FFFFFF; /* Text color */
+    -fx-font-size: 14px;
+    -fx-padding: 5px;
+}
+
+.combo-box .list-cell:hover {
+    -fx-background-color: #2A2A3C; /* Slightly lighter on hover */
+}
+
+.combo-box .list-cell:selected {
+    -fx-background-color: #3B3B4F; /* Highlight selected item */
+    -fx-text-fill: #FFD700; /* Gold text for selected item */
+}
+
+.combo-box .combo-box-popup {
+    -fx-background-color: #1E1E2E; /* Dark background for dropdown */
+    -fx-border-color: #3B3B4F; /* Subtle border */
+}
+
+/* Style the editable text field of ComboBox */
+.combo-box .text-field {
+    -fx-background-color: #2A2A3C; /* Dark background for text field */
+    -fx-text-fill: #FFFFFF; /* Text color */
+    -fx-border-color: #3B3B4F; /* Border color */
+    -fx-border-radius: 5px;
+    -fx-padding: 5px;
+}
+
+/* Style the ComboBox when focused */
+.combo-box:focused {
+    -fx-border-color: #FFD700; /* Gold border when focused */
+}
+
+/* Style for the bus station stop circle */
+.stop-circle {
+    -fx-shape: "M 0,10 A 10,10 0 1,1 20,10 A 10,10 0 1,1 0,10"; /* Circular shape */
+    -fx-fill: #007bff; /* Blue color for the bus stop dot */
+    -fx-stroke: #0056b3; /* Darker blue stroke */
+    -fx-stroke-width: 2px; /* Stroke width */
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 8, 0.5, 2, 2); /* Optional shadow for 3D effect */
+    -fx-cursor: hand;
+}
+
+.edge-line {
+	-fx-stroke: #2F4F4F; /* Dark Slate Gray color */
+    -fx-stroke-width: 10;  /* Stroke width for the line */
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 5, 0.5, 2, 2);
+    -fx-cursor: hand;
+}
+
+.edge-arrowhead {
+	-fx-fill: #2F4F4F; /* Dark Slate Gray color for the arrowhead */
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 5, 0.5, 2, 2);
+    -fx-cursor: hand;
+}
+
+/* Optional: Add text to the bus stop, such as 'Station' */
+.stop-text {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-text-alignment: center;
+    -fx-background-color: rgba(0, 0, 0, 0.6); /* Dark background behind text for visibility */
+    -fx-padding: 4px;
+    -fx-background-radius: 5px;
+}
+
+/* Styling the CheckBox */
+.check-box {
+    -fx-font-size: 14px; /* Font size of the CheckBox text */
+    -fx-text-fill: #FFFFFF; /* White text color */
+    -fx-padding: 5px; /* Padding around the CheckBox */
+}
+
+/* Styling the CheckBox box itself */
+.check-box .box {
+    -fx-border-color: #4A5A64; /* Dark blue-gray border */
+    -fx-border-width: 2px; /* Border thickness */
+    -fx-background-color: #2B3A42; /* Dark blue background */
+    -fx-border-radius: 3px; /* Rounded corners for the box */
+    -fx-pref-width: 15px; /* Width of the box */
+    -fx-pref-height: 15px; /* Height of the box */
+}
+
+/* Styling for when the CheckBox is selected */
+.check-box:selected .box {
+    -fx-background-color: #007bff; /* Bright blue when selected */
+    -fx-border-color: #0056b3; /* Slightly darker blue for border */
+}
+
+/* Hover effect for the CheckBox */
+.check-box:hover .box {
+    -fx-background-color: #4A5A64; /* Lighter blue-gray on hover */
+    -fx-border-color: #007bff; /* Brighter border color on hover */
+}
+
+/* Focused CheckBox styling (when tabbed to) */
+.check-box:focused .box {
+    -fx-effect: dropshadow(gaussian, #007bff, 5, 0.5, 0, 0); /* Blue glow */
+    -fx-border-color: #007bff; /* Brighter border to indicate focus */
+}
+
+/* General Text Container Styling */
+.text-container {
+    -fx-background-color: #2B3A42; /* Dark blue-gray background */
+    -fx-border-color: #4A5A64; /* Subtle border for visibility */
+    -fx-border-width: 1.5px; /* Thin border for framing */
+    -fx-border-radius: 5px; /* Rounded corners */
+    -fx-padding: 10px; /* Padding around the content */
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 5, 0.5, 2, 2); /* Subtle shadow */
+}
+
+.text-container-borderless {
+    -fx-background-color: #2B3A42; /* Dark blue-gray background */
+    -fx-border-width: 0px; /* Thin border for framing */
+    -fx-border-radius: 5px; /* Rounded corners */
+    -fx-padding: 10px; /* Padding around the content */
+}
+
+/* Text inside the text container */
+.terminal-text{
+    -fx-fill: #FFFFFF; /* White text color */
+    -fx-font-size: 16px; /* Font size */
+    -fx-font-family: "Consolas", "Courier New", monospace; /* Monospace font */
+    -fx-wrap-text: true; /* Ensure text wraps properly */
+}
+
+
+/* ScrollPane styling */
+.text-container ScrollPane {
+    -fx-background: transparent; /* Transparent background to avoid mismatched colors */
+    -fx-background-color: transparent; /* Transparent content area */
+    -fx-border-color: #4A5A64; /* Border around the ScrollPane */
+    -fx-border-width: 2px;
+    -fx-border-radius: 5px;
+}
+
+.text-container ScrollPane .viewport {
+    -fx-background-color: #2B3A42; /* Match the terminal background */
+    -fx-padding: 5px; /* Padding for the viewport content */
+    -fx-border-width: 0px;
+}
+
+/* ScrollBar styling */
+.text-container ScrollPane .scroll-bar {
+    -fx-background-color: #1E272E; /* Dark blue background for the scrollbar track */
+}
+
+.text-container ScrollPane .scroll-bar .thumb {
+    -fx-background-color: #4A5A64; /* Blue-gray scrollbar thumb */
+    -fx-background-radius: 5px; /* Rounded thumb */
+}
+
+/* Custom title bar */
+.hbox {
+    -fx-background-color: #2B3A42; /* Dark blue-gray background */
+    -fx-padding: 5px; /* Padding around the content */
+    -fx-spacing: 5px; /* Space between elements in the title bar */
+}
+
+/* Spacer region (optional, just ensures buttons are aligned to the right) */
+.region {
+    -fx-background-color: transparent; /* Invisible spacer */
+}
+
+/* Buttons in the title bar */
+.button.close.minimize {
+    -fx-background-color: transparent; /* Transparent background for clean look */
+    -fx-text-fill: #FFFFFF; /* White text color */
+    -fx-font-size: 14px; /* Font size for the buttons */
+    -fx-font-family: "Segoe UI", "Arial", sans-serif; /* Clean modern font */
+    -fx-border-width: 0; /* Remove default border */
+    -fx-cursor: hand; /* Change cursor to pointer for interactivity */
+}
+
+/* Hover effect for the buttons */
+.button.close.minimize:hover {
+    -fx-background-color: #3A4A52; /* Slightly lighter blue-gray on hover */
+    -fx-text-fill: #FFD700; /* Golden yellow text on hover for visibility */
+}
+
+/* Pressed effect for the buttons */
+.button.close.minimize:pressed {
+    -fx-background-color: #1C2A33; /* Darker background when pressed */
+    -fx-text-fill: #FFA500; /* Orange text color for active click */
+}
+
+/* Styling for the minimize button */
+.button.minimize {
+    -fx-font-size: 18px; /* Slightly larger for the minimize icon */
+    -fx-font-weight: bold; /* Make it stand out */
+}
+
+/* Styling for the close button */
+.button.close {
+    -fx-font-size: 16px; /* Normal size for the "X" icon */
+    -fx-font-weight: bold; /* Bold for clarity */
+    -fx-text-fill: #FF6F61; /* Red text color for the close button */
+}
+
+.button.close:hover {
+    -fx-background-color: #6A1B1A; /* Reddish background on hover */
+    -fx-text-fill: #FFFFFF; /* White text for better contrast */
+}
+
+/* Main content area */
+.vbox {
+    -fx-background-color: #1C2A33; /* Darker background for the main content */
+    -fx-padding: 10px; /* Add some padding */
+    -fx-border-color: #4A5A64; /* Border to separate the content from the title bar */
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px; /* Rounded corners */
+}

@@ -1,0 +1,79 @@
+/* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
+.root {
+    -fx-background-color: #2A2A3C; /* Dark blue background */
+    -fx-text-fill: #FFFFFF; /* White text */
+    -fx-font-family: 'Segoe UI', sans-serif;
+}
+
+.pane {
+    -fx-background-color: #2A2A3C; /* Slightly lighter blue for pane backgrounds */
+    -fx-border-color: #3B3B4F; /* Subtle border for panes */
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 10;
+}
+
+.button {
+    -fx-background-color: #3B3B4F; /* Dark button */
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: transparent;
+    -fx-background-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #4E4E65; /* Slightly lighter on hover */
+}
+
+.label {
+    -fx-text-fill: #A6A6D9; /* Softer text for labels */
+}
+
+.text-field {
+    -fx-background-color: #2A2A3C;
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: #3B3B4F;
+    -fx-border-radius: 3px;
+    -fx-padding: 5;
+}
+
+.alert {
+    -fx-background-color: #2E3B47; /* Dark blue background */
+    -fx-border-color: #4A5A64; /* Slightly lighter border color */
+    -fx-border-width: 2px; /* Visible border */
+    -fx-border-radius: 5px; /* Rounded corners */
+}
+
+/* Styling for the alert header */
+.alert .header {
+    -fx-text-fill: #FFFFFF; /* White text color for the header */
+    -fx-font-size: 16px; /* Larger font size for the header */
+    -fx-font-weight: bold; /* Bold header */
+}
+
+/* Styling for the alert content (message text) */
+.alert .content {
+    -fx-text-fill: #D1D9E2; /* Light gray text for content */
+    -fx-font-size: 14px; /* Font size for the message text */
+}
+
+/* Styling for the buttons in the alert */
+.alert .button {
+    -fx-background-color: #4A5A64; /* Dark blue buttons */
+    -fx-text-fill: #FFFFFF; /* White text on buttons */
+    -fx-border-color: #3B4A5D; /* Border color for buttons */
+    -fx-border-radius: 5px; /* Rounded corners for buttons */
+    -fx-padding: 10px 20px; /* Padding for button */
+    -fx-font-size: 14px; /* Font size for buttons */
+}
+
+/* Button hover effect */
+.alert .button:hover {
+    -fx-background-color: #3C4A56; /* Lighter background on hover */
+}
+
+/* Styling for the alert icon (if exists) */
+.alert .icon {
+    -fx-fill: #FFD700; /* Gold color for icon */
+}
